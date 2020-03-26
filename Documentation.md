@@ -54,8 +54,12 @@ as the last name within the set of Authors. **Until 2014, Pubmed metadata only i
 
 However, due to extensive prior work done by Academix, they have an enriched dataset:
 
-
-- **INSERT INFORMATION ABOUT ENRICHED DATASET**
+Using NLP methods (e.g. NER) Academix has enriched\strtured the following features (relates to last-author):
+- Country: name of country extracted from free-text affiliaiton 
+- Institue: name & type (goverment,academic,medical-center) of insitutue extracted from free-text affiliaiton 
+- Email: researcher emails extracted from free-text affiliaiton 
+- Industry collborations: inidcation of any companies took part in the study
+- Researcher ID: unique ID given by Academix based on naive assumptions (country+name or country+name+inst_name)
 
 Side note: There is still room for improvement to the dataset. Ex: Truncating emails (when available) to the name before @ sign or assigning weights to the MESH Data
 
