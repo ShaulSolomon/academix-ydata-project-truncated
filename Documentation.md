@@ -75,6 +75,24 @@ large enough to resolve our core problem, but they are a viable option for testi
 
 **Google Scholar** : The dataset seems to have a bias that the profiles are ensured by the academic themselves.<br>
 **Author-ity** : While they offer a search engine, their database is not open to the public.<br>
+**PLOS** : On Academic papers, this was the dataset used to check accuracy of Authority, but after close examination, it only examined papers upto 2010, which isn't good, because they changed the protocol after '14, and we want to see the affect of our enriched features.
 - **NIH PI ID** : There is no one-clear database with both PI ID's and PMID (Pubmed Article ID), there is a possibility to join the two using shared cells (Article Title).
 
+<h3> 2) Decide on metric for cluster evaluation </h3>
 
+The simplest and most clear form of metric would be Precision/Recall.
+However, in order to get a better understanding on where our model is succeeding or otherwise, we should examing P/R narrowed by two heuristics. <br>
+</t>a) The commonality of the name.
+</t>b) The productivity of the author / How many articles they published.<br>
+
+
+![](https://journals.plos.org/plosone/article/figure/image?size=large&id=10.1371/journal.pone.0158731.t003)
+
+![](https://journals.plos.org/plosone/article/figure/image?size=large&id=10.1371/journal.pone.0158731.g004)
+
+Another interesting evaluation would be to see not just binary correct/incorrect labeling but to analyze how mis-integrated/mis-separated the predicted id's are.
+
+![](https://journals.plos.org/plosone/article/figure/image?size=large&id=10.1371/journal.pone.0158731.t001)
+
+
+(Images and heuristics based off https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0158731)
