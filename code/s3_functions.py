@@ -30,13 +30,13 @@ def list_files_in_bucket(AWS_ACCESS_KEY, AWS_ACCESS_SECRET_KEY, bucket):
         mybucket = conn.get_bucket(bucket)
         return [i for i in mybucket.list()]
 
-def get_dataframe_from_s3(AWS_ACCESS_KEY, AWS_ACCESS_SECRET_KEY, key, bucket, file="data.csv"):
+def get_dataframe_from_s3(AWS_ACCESS_KEY, AWS_ACCESS_SECRET_KEY, bucket, file="data.csv"):
   conn = S3Connection(AWS_ACCESS_KEY, AWS_ACCESS_SECRET_KEY)
   conn.auth_region_name = 'eu-west-1.amazonaws.com'
   mybucket = conn.get_bucket(bucket)
 
   # Retrieve Data
-  key = mybucket.get_key(key)
+  key = mybucket.get_key(file)
   key.get_contents_to_filename(file)
   df = pd.read_csv(file)
   return df

@@ -17,11 +17,25 @@ import s3_functions as s3func
 
 class PaperSource:
     def __init__(self):
-        self.default_source = 'some text'
+        self.creds=s3func.get_creds()
+        self.data=None
+    def get_dataset(self):
+            return self.data
 
-    def get_papers_df_s3(self, author_name):
-            df=pd.DataFrame()
-            return df
+    def load_dataset(self, set_name):
+            """"
+            fetch the data from S3
+            """
+            datasets={
+                    "enriched_labeled" : "enriched_labeled_dataset.csv",
+                    "not_enriched_labeled": "not_enriched_labeled_dataset.csv"
+                    }
+            self.data=s3func.get_dataframe_from_s3(self.creds['AWS_ACCESS_KEY'],
+                self.creds['AWS_ACCESS_SECRET_KEY'],
+                self.creds['BUCKET'],
+                file=datasets[set_name]
+            )
+            pass
 
 #     def get_max_researcher_id_from_index(self):
 #         a = A('max', field='last_author_id')
