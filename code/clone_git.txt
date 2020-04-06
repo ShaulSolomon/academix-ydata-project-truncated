@@ -1,0 +1,10 @@
+import os, urllib, glob, sys
+from getpass import getpass
+
+user = input('User name: ')
+password = getpass('Password: ')
+password = urllib.parse.quote(password) # your password is converted into url format
+cmd_string = "! git clone https://{0}:{1}@github.com/rgranit/academix-ydata-project AYP".format(user, password)
+
+os.system(cmd_string)
+cmd_string, password = "", "" # removing the password from the variable
