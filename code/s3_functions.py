@@ -6,11 +6,29 @@ from boto import s3
 import boto3, os, re, ssl
 import pandas as pd
 import numpy as np
+from configparser import ConfigParser
 
-#Not sure what this does - but it was in the code.
-if (not os.environ.get('PYTHONHTTPSVERIFY', '') and
-getattr(ssl, '_create_unverified_context', None)):
-    ssl._create_default_https_context = ssl._create_unverified_context
+### fetch the credentials ###
+creds_path = "credentials.ini"
+config_parser = ConfigParser()
+config_parser.read(creds_path)
+s3_dict = config_parser["S3"]
+AWS_ACCESS_KEY=s3_dict['AWS_ACCESS_KEY']
+AWS_ACCESS_SECRET_KEY=s3_dict['AWS_ACCESS_SECRET_KEY']
+BUCKET=s3_dict['BUCKET']
+#####
+
+def get_creds():
+        return s3_dict
+
+def list_files_in_bucket(AWS_ACCESS_KEY, AWS_ACCESS_SECRET_KEY, bucket):
+        """
+        returns a list of file in a bucket
+        """
+        conn = S3Connection(AWS_ACCESS_KEY, AWS_ACCESS_SECRET_KEY)
+        conn.auth_region_name = 'eu-west-1.amazonaws.com'
+        mybucket = conn.get_bucket(bucket)
+        return [i for i in mybucket.list()]
 
 def get_dataframe_from_s3(AWS_ACCESS_KEY, AWS_ACCESS_SECRET_KEY, key, bucket, file="data.csv"):
   conn = S3Connection(AWS_ACCESS_KEY, AWS_ACCESS_SECRET_KEY)
@@ -20,7 +38,7 @@ def get_dataframe_from_s3(AWS_ACCESS_KEY, AWS_ACCESS_SECRET_KEY, key, bucket, fi
   # Retrieve Data
   key = mybucket.get_key(key)
   key.get_contents_to_filename(file)
-  df = pd.read_csv('data.csv')
+  df = pd.read_csv(file)
   return df
 
 def upload_to_s3(aws_access_key_id, aws_secret_access_key, file, bucket, key, callback=None, md5=None, reduced_redundancy=False, content_type=None):
@@ -62,3 +80,9 @@ def upload_to_s3(aws_access_key_id, aws_secret_access_key, file, bucket, key, ca
     if sent == size:
         return True
     return False
+
+
+#code used to solve some issue with ssl in mac
+if (not os.environ.get('PYTHONHTTPSVERIFY', '') and
+getattr(ssl, '_create_unverified_context', None)):
+    ssl._create_default_https_context = ssl._create_unverified_context
