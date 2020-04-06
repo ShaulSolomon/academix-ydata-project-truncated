@@ -18,7 +18,7 @@ def get_dataframe_from_s3(AWS_ACCESS_KEY, AWS_ACCESS_SECRET_KEY, key, bucket, fi
   mybucket = conn.get_bucket(bucket)
 
   # Retrieve Data
-  key = mybucket.get_key('key)
+  key = mybucket.get_key(key)
   key.get_contents_to_filename(file)
   df = pd.read_csv('data.csv')
   return df
