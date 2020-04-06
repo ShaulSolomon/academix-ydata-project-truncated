@@ -8,9 +8,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.cluster import DBSCAN
 import seaborn as sns
 
-
 from yuval_module.paper_source import PaperSource
-
 
 class PaperClusterer:
     def __init__(self, eps=1.37):
@@ -18,8 +16,8 @@ class PaperClusterer:
         self.cur_researcher_id=self.paper_source.cur_researcher_id #first free researcher id
         self.cached_researchers={}
         self.eps=eps
-        self.cur_dict=corpora.Dictionary.load("/home/ubuntu/data/mesh_dictionary_bulk_papers4.mm")
-        self.tfidf_model=models.TfidfModel.load("/home/ubuntu/data/tfidf_corpus_papers4.bin")
+        self.cur_dict=corpora.Dictionary.load("./yuval_module/mesh_dict.mm")
+        self.tfidf_model=models.TfidfModel.load("./yuval_module/tfidf_corpus_papers4.bin")
         self.num_dict_terms=len(self.cur_dict.keys())
 
     def empty_last_author_response(self, row):

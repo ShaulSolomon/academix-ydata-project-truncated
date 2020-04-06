@@ -19,6 +19,7 @@ class PaperSource:
     def __init__(self):
         self.creds=s3func.get_creds()
         self.data=None
+        self.cur_researcher_id=0
     def get_dataset(self):
             return self.data
 
