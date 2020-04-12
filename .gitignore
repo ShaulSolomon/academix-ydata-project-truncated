@@ -348,3 +348,7 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+code/academix_enriched.csv
+code/academix_enriched.pkl
+code/academix_not_enriched.csv
+code/academix_not_enriched.pkl
