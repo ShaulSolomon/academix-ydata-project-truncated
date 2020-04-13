@@ -1,14 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import os
-
-package = "boto"
-
-try:
-    __import__package
-except:
-    os.system("pip install "+ package)
-
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key
 from boto import s3
