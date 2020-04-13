@@ -5,6 +5,7 @@ from boto.s3.connection import S3Connection
 from boto.s3.key import Key
 from boto import s3
 import boto3
+import boto
 import re
 import ssl
 import pandas as pd
