@@ -5,7 +5,7 @@ from boto.s3.connection import S3Connection
 from boto.s3.key import Key
 from boto import s3
 import boto3
-import boto
+from boto import boto
 import re
 import ssl
 import pandas as pd
@@ -74,7 +74,7 @@ def upload_to_s3(file, key, AWS_ACCESS_KEY=AWS_ACCESS_KEY, AWS_ACCESS_SECRET_KEY
         file.seek(0, os.SEEK_END)
         size = file.tell()
 
-    conn = boto.connect_s3(aws_access_key_id, aws_secret_access_key)
+    conn = boto.connect_s3(AWS_ACCESS_KEY, AWS_ACCESS_SECRET_KEY)
     bucket = conn.get_bucket(bucket, validate=True)
     k = Key(bucket)
     k.key = key
