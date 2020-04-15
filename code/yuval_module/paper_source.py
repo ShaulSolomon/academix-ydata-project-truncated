@@ -37,6 +37,15 @@ class PaperSource:
                 file=datasets[set_name]
             )
             pass
+    def add_processed_fields(self,res_df):
+            res_df.loc[:, "mesh_clean"]=res_df.apply(get_mesh_clean, axis=1)
+            #res_df.loc[:, "num_mesh"]=res_df["mesh_clean"].apply(lambda l:len(l))
+            res_df.loc[:, "other_authors"]=res_df.apply(get_other_authors, axis=1)
+            #res_df.loc[:, "num_coauthors"]=res_df["other_authors"].apply(lambda l:len(l))
+            res_df.loc[:, "inst_clean"]=res_df.apply(simplify_inst, axis=1)
+            res_df.loc[:, "email_clean"]=res_df.last_author_email.apply(self.clean_email)
+             #res_df.loc[:, "candidate_rank"]=res_df["num_coauthors"]+res_df["num_mesh"]
+            return res_df.sort_values(["inst_clean"])
 
 def simplify(val):
     if val is None or val=="" or not val:

@@ -27,8 +27,17 @@ class PaperClusterer:
         "from_pubmed":row.from_pubmed}
         return pd.Series(res_row).to_frame().transpose()
 
-    
-
+    def obtain_dist_matrix(self, author_df):
+            start_time=time()
+            rows_and_cluster_dfs_lst=self.get_dist_matrix(author_df)
+            res_df=[r[0] for r in rows_and_cluster_dfs_lst]
+            #cluster_out_path="/home/ubuntu/data/cluster_res.tsv"
+            # clustered_df.to_csv(cluster_out_path, index=False, sep='\t')
+            print("handled {} papers".format(author_df.pmid.size))
+            end_time=time()
+            print("iteration time: {}".format(end_time-start_time))
+            cluster_dfs=rows_and_cluster_dfs_lst
+            return res_df, cluster_dfs
 
     def add_new_researcher(self, pmid, author_name, last_author_inst, last_author_inst_type, last_author_forename):
         author_name_trimmed='_'.join([author_name.strip(), last_author_forename.strip()])
@@ -86,28 +95,21 @@ class PaperClusterer:
         res["last_author_name"]=author_name
         return res
 
-    def get_cluster_result(self, papers_df, pmid, author_name):
+    def get_cluster_result(self, papers_df, author_name):
         # print("pmid={}".format(pmid))
         # print("papers_df:")
         # print(papers_df[["pmid", "last_author_id","cluster", "last_author_inst","other_authors","mesh_clean"]])
-        cluster_row=papers_df[papers_df.pmid==pmid].iloc[0]
+        #cluster_row=papers_df[papers_df.pmid==pmid].iloc[0]
         cur_cluster=cluster_row["cluster"]
-        if pd.isnull(cur_cluster) or cur_cluster==-1: #unclustered - new researcher
-            res=self.add_new_researcher(pmid, 
-                                        author_name, 
-                                        cluster_row["last_author_inst"], 
-                                        cluster_row["last_author_inst_type"],
-                                        cluster_row["last_author_forename"])
-        else:
-            cluster_df=papers_df[papers_df.cluster==cur_cluster]
-            res=self.extract_req_data(cluster_df.sort_values("pmid"), pmid, author_name)
-            res["last_author_forename"]=cluster_row["last_author_forename"]
+        cluster_df=papers_df[papers_df.cluster==cur_cluster]
+        #res=self.extract_req_data(cluster_df.sort_values("pmid"), pmid, author_name)
+        res["last_author_forename"]=cluster_row["last_author_forename"]
         res["pub_year"]=cluster_row["pub_year"]
         res["last_author_country"]=cluster_row["last_author_country"]
         res["last_author_inst"]=cluster_row["last_author_inst"]
         return res
 
-    def cluster_papers_by_name(self, pmid, author_papers_df):
+    def cluster_papers_by_name(self, author_papers_df):
         debug=False
         for_clustering_df=author_papers_df
         for_clustering_df.loc[:, "weight"]=1
@@ -127,11 +129,24 @@ class PaperClusterer:
             print(total_df[["pmid", "last_author_inst", "cluster","mesh_clean","other_authors"]])
             print("number of clusters: {}".format(total_df.cluster.nunique()))
     
-
         total_df["cluster"].fillna(-1.0, inplace=True)
         #print("clustering df:")
         #print(total_df)
         return total_df
+
+    def get_dist_matrix(self, author_papers_df):
+            """
+            Starting with pmid and author name, collect papers written by people with the same name,
+            and then cluster to get researcher id, institute etc. 
+            """
+            if author_papers_df.empty:
+                    print("empty author_papers_df")
+            author_papers_df=self.paper_source.add_processed_fields(author_papers_df)
+            print("author_papers_df affiliation:")
+            print(author_papers_df[["pmid","last_author_name","last_author_inst", "last_author_affiliation"]])
+            total_df=self.cluster_papers_by_name( author_papers_df)
+            self.print_cluster_metrics(total_df)
+            return total_df
 
     def infer_author_data(self, row):
         """
@@ -178,7 +193,7 @@ class PaperClusterer:
         # chosen_df=total_df[total_df.pmid.isin(["28798069","29792946"])]
         # print(chosen_df[["pmid", "cluster","last_author_forename"]])
         self.print_cluster_metrics(total_df)
-        res_row=self.get_cluster_result(total_df, pmid, author_name)
+        res_row=self.get_cluster_result(total_df, author_name)
         res_row["rownum"]=row["rownum"]
         res_row["from_pubmed"]=row["from_pubmed"]
         res_row["last_author_forename"]=row["last_author_forename"]
