@@ -6,5 +6,5 @@
 
 <h3>Meeting with Etam - April 9, 2020</h3>
 
-1. **Do: Look at the labeled dataset and see how many disambiguated authors we have and how many papers they have.**
+1. ~~Do: Look at the labeled dataset and see how many disambiguated authors we have and how many papers they have.~~
 2. ~~To discuss with Yuval about the scoring metric, whether to keep the applied metric or do something more generic (Wasserstein Distance)~~
