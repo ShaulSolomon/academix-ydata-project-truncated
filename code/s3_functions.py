@@ -11,6 +11,7 @@ import ssl
 import pandas as pd
 import numpy as np
 from configparser import ConfigParser
+import json
 
 ### fetch the credentials ###
 creds_path = "credentials.ini"
@@ -37,7 +38,7 @@ def list_files_in_bucket(AWS_ACCESS_KEY=AWS_ACCESS_KEY, AWS_ACCESS_SECRET_KEY=AW
         return [i for i in mybucket.list()]
 
 
-def get_dataframe_from_s3(AWS_ACCESS_KEY=AWS_ACCESS_KEY, AWS_ACCESS_SECRET_KEY=AWS_ACCESS_SECRET_KEY, bucket=BUCKET, file="data.csv"):
+def get_dataframe_from_s3(AWS_ACCESS_KEY=AWS_ACCESS_KEY, AWS_ACCESS_SECRET_KEY=AWS_ACCESS_SECRET_KEY, bucket=BUCKET, file="data.csv", type="csv"):
   conn = S3Connection(AWS_ACCESS_KEY, AWS_ACCESS_SECRET_KEY)
   conn.auth_region_name = 'eu-west-1.amazonaws.com'
   mybucket = conn.get_bucket(bucket)
@@ -45,8 +46,13 @@ def get_dataframe_from_s3(AWS_ACCESS_KEY=AWS_ACCESS_KEY, AWS_ACCESS_SECRET_KEY=A
   # Retrieve Data
   key = mybucket.get_key(file)
   key.get_contents_to_filename(file)
-  df = pd.read_csv(file)
+  if type=="json":
+          df = pd.read_json(file, orient="records")
+  else:
+          df = pd.read_csv(file)
   return df
+
+
 
 
 def upload_to_s3(file, key, AWS_ACCESS_KEY=AWS_ACCESS_KEY, AWS_ACCESS_SECRET_KEY=AWS_ACCESS_SECRET_KEY, bucket=BUCKET,  callback=None, md5=None, reduced_redundancy=False, content_type=None):
