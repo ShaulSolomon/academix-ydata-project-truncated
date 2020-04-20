@@ -29,14 +29,19 @@ class PaperSource:
             """
             datasets={
                     "enriched_labeled" : "enriched_labeled_dataset.csv",
-                    "not_enriched_labeled": "not_enriched_labeled_dataset.csv"
+                    "not_enriched_labeled": "not_enriched_labeled_dataset.csv",
+                    "mini" : "enriched_labeled_dataset_mini.csv"
                     }
-            self.data=s3func.get_dataframe_from_s3(self.creds['AWS_ACCESS_KEY'],
+            df=s3func.get_dataset_from_s3(self.creds['AWS_ACCESS_KEY'],
                 self.creds['AWS_ACCESS_SECRET_KEY'],
                 self.creds['BUCKET'],
                 file=datasets[set_name]
             )
+            #convert to json format
+        #     df.join(df['authors'].apply(json.loads).apply(pd.Series))
+            self.data=df
             pass
+
     def add_processed_fields(self,res_df):
             res_df.loc[:, "mesh_clean"]=res_df.apply(get_mesh_clean, axis=1)
             #res_df.loc[:, "num_mesh"]=res_df["mesh_clean"].apply(lambda l:len(l))

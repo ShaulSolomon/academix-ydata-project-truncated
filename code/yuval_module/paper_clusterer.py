@@ -27,7 +27,7 @@ class PaperClusterer:
         "from_pubmed":row.from_pubmed}
         return pd.Series(res_row).to_frame().transpose()
 
-    def obtain_dist_matrix(self, author_df):
+    def cluster_res(self, author_df):
             start_time=time()
             rows_and_cluster_dfs_lst=self.get_dist_matrix(author_df)
             res_df=[r[0] for r in rows_and_cluster_dfs_lst]
@@ -136,11 +136,12 @@ class PaperClusterer:
 
     def get_dist_matrix(self, author_papers_df):
             """
-            Starting with pmid and author name, collect papers written by people with the same name,
-            and then cluster to get researcher id, institute etc. 
+            Starting author dataframe (papers written by people with the same name)
+            and running clutering to get researcher id, institute etc. 
             """
             if author_papers_df.empty:
                     print("empty author_papers_df")
+                    return pd.DataFrame()
             author_papers_df=self.paper_source.add_processed_fields(author_papers_df)
             print("author_papers_df affiliation:")
             print(author_papers_df[["pmid","last_author_name","last_author_inst", "last_author_affiliation"]])
