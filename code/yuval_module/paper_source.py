@@ -28,19 +28,36 @@ class PaperSource:
             fetch the data from S3
             """
             datasets={
-                    "enriched_labeled" : "enriched_labeled_dataset.csv",
+                    "enriched_labeled" : "enriched_labeled_dataset.json",
                     "not_enriched_labeled": "not_enriched_labeled_dataset.csv",
-                    "mini" : "enriched_labeled_dataset_mini.csv"
+                    "mini" : "academix_enriched_mini.json"
                     }
-            df=s3func.get_dataset_from_s3(self.creds['AWS_ACCESS_KEY'],
+            self.data=s3func.get_dataframe_from_s3(self.creds['AWS_ACCESS_KEY'],
                 self.creds['AWS_ACCESS_SECRET_KEY'],
                 self.creds['BUCKET'],
-                file=datasets[set_name]
+                file=datasets[set_name],
+                type='json'
             )
-            #convert to json format
-        #     df.join(df['authors'].apply(json.loads).apply(pd.Series))
-            self.data=df
             pass
+        
+    def clean_email(self, orig_email):
+        try:
+            if orig_email is None or pd.isnull(orig_email):
+                return ""
+            if isinstance(orig_email, str):
+                return orig_email
+            if isinstance(orig_email, list):
+                l = len(orig_email)
+                if l==0:
+                    return ""
+                elif l==1:
+                    return orig_email[0]
+                else:
+                    return orig_email[-1]
+        except ValueError as e:
+            print(e)
+            print("could not process {}".format(orig_email))
+            return ""
 
     def add_processed_fields(self,res_df):
             res_df.loc[:, "mesh_clean"]=res_df.apply(get_mesh_clean, axis=1)

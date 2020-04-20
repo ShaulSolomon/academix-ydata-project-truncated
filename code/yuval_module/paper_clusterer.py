@@ -27,8 +27,18 @@ class PaperClusterer:
         "from_pubmed":row.from_pubmed}
         return pd.Series(res_row).to_frame().transpose()
 
+    def fetch_forename(self,data):
+            """fetch forename from authors list"""
+            last_author=data[-1]
+            if "forename" in last_author and last_author["forename"] is not None:
+                    return last_author["forename"]
+            else:
+                    return ""
+
     def cluster_res(self, author_df):
             start_time=time()
+            # add forename
+            author_df['last_author_forename']=author_df['authors'].apply(lambda x: self.fetch_forename(x))
             rows_and_cluster_dfs_lst=self.get_dist_matrix(author_df)
             res_df=[r[0] for r in rows_and_cluster_dfs_lst]
             #cluster_out_path="/home/ubuntu/data/cluster_res.tsv"
@@ -144,7 +154,7 @@ class PaperClusterer:
                     return pd.DataFrame()
             author_papers_df=self.paper_source.add_processed_fields(author_papers_df)
             print("author_papers_df affiliation:")
-            print(author_papers_df[["pmid","last_author_name","last_author_inst", "last_author_affiliation"]])
+            print(author_papers_df[["pmid","last_author_name","last_author_inst"]])
             total_df=self.cluster_papers_by_name( author_papers_df)
             self.print_cluster_metrics(total_df)
             return total_df
