@@ -60,14 +60,14 @@ class PaperClusterer:
             author_papers_df=self.paper_source.add_processed_fields(author_papers_df)
             print("author_papers_df affiliation:")
             print(author_papers_df[["pmid","last_author_name","last_author_inst"]])
-            combined_dist, for_clustering_df=self.process_features_to_dist(author_papers_df)
+            combined_dist, for_clustering_df, combined_sim =self.process_features_to_dist(author_papers_df)
             print("***")
             print(for_clustering_df['weight'])
             for_clustering_df=self.cluster_by_sim(combined_dist,for_clustering_df)
             total_df=for_clustering_df.rename(columns={"db_cluster":"cluster"})
             total_df["cluster"].fillna(-1.0, inplace=True)
             self.print_cluster_metrics(total_df)
-            return combined_dist, total_df
+            return combined_dist, combined_sim, total_df
 
 
 
@@ -124,8 +124,8 @@ class PaperClusterer:
         if len(for_clustering_df)==1:
             for_clustering_df.loc[:, "db_cluster"]=0
         else:
-                combined_dist=self.build_distance_matrix(for_clustering_df)
-        return combined_dist, for_clustering_df
+                combined_dist, combined_sim =self.build_distance_matrix(for_clustering_df)
+        return combined_dist, for_clustering_df, combined_sim
         
 
 
@@ -271,10 +271,7 @@ class PaperClusterer:
 
         email_sim=self.email_similarity(df)
         print(df[["pmid","last_author_email","email_clean"]])
-        country_sim=self.country_similarity(df)
-
-             
-       
+        country_sim=self.country_similarity(df) 
 
         import seaborn  as sns
         import matplotlib.pyplot as plt
@@ -355,7 +352,7 @@ class PaperClusterer:
         combined_dist_vector=combined_dist.reshape(num_items,)
         print(pd.Series(combined_dist_vector).describe())
 
-        return combined_dist
+        return combined_dist,combined_sim
 
  
 
