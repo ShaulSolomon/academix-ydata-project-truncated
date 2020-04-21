@@ -1,3 +1,9 @@
+<h3>Meeting with Etam - April 20, 2020</h3>
+
+1. We explored the data and found that 'Name Disambiguation' happens to 10% of the data, which is enough to acknowledge that its a big enough problem that we can't just randomly assume that uninspected authors are disambiguated.
+2. Knowing where for a given `author_last_name`, there is only one `pmid`, we are certain that this is really just one person. We can use them for use cases.
+3. **Do: Once we get the models working, we need to specify very clear use-cases (ex: taking 30 authors with 10 papers each, taking 3 authors with many papers each)**
+
 <h3>Meeting with Yuval - April 13, 2020</h3>
 
 1. Even though there are certain benefits to cluster homogeniaty as a whole - it was agreed upon that using the greedy algorithm to assign clusters to researchers is actually a good metric (especially as we add mis-integration and mis-separation to help understand in what ways is the method succesful).
