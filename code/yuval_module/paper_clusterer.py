@@ -260,7 +260,7 @@ class PaperClusterer:
         clustering = DBSCAN(eps=self.eps, min_samples=2, metric="precomputed").fit(dist, sample_weight=paper_weights)
         return clustering.labels_
 
-    def build_distance_matrix(self, df):
+    def build_distance_matrix(self, df, just_sim_matrix_flag = False):
         author_sim=self.get_author_similarity(df)
         mesh_sim=self.get_mesh_similarity(df)
         # print("forenames:")
@@ -339,6 +339,10 @@ class PaperClusterer:
                               "country":country_sim.reshape(num_items,),
                               "forename":forename_sim.reshape(num_items,)
                               })
+        
+        if just_sim_matrix_flag:
+            return feat_df
+        
         print("correlations:")
         print(feat_df.corr())
 
