@@ -58,13 +58,13 @@ class PaperClusterer:
                     return pd.DataFrame()
             author_papers_df['last_author_forename']=author_papers_df['authors'].apply(lambda x: self.fetch_forename(x))
             author_papers_df=self.paper_source.add_processed_fields(author_papers_df)
-            print("author_papers_df affiliation:")
-            print(author_papers_df[["pmid","last_author_name","last_author_inst"]])
+            #print("author_papers_df affiliation:")
+            #print(author_papers_df[["pmid","last_author_name","last_author_inst"]])
             if just_sim_matrix_flag:
                 return self.process_features_to_dist(author_papers_df, True)
             combined_dist, for_clustering_df, combined_sim =self.process_features_to_dist(author_papers_df, False)
-            print("***")
-            print(for_clustering_df['weight'])
+            #print("***")
+            #print(for_clustering_df['weight'])
             for_clustering_df=self.cluster_by_sim(combined_dist,for_clustering_df)
             total_df=for_clustering_df.rename(columns={"db_cluster":"cluster"})
             total_df["cluster"].fillna(-1.0, inplace=True)
@@ -119,8 +119,8 @@ class PaperClusterer:
         debug=False
         for_clustering_df=author_papers_df
         for_clustering_df.loc[:, "weight"]=1
-        print("before tfidf, mesh_clean is:")
-        print(for_clustering_df["mesh_clean"])
+        #print("before tfidf, mesh_clean is:")
+        #print(for_clustering_df["mesh_clean"])
         for_clustering_df.loc[:, "mesh_as_tfidf"]=for_clustering_df["mesh_clean"].apply(self.mesh_tfidf_transform)
         #with pandas_log.enable():   
         if len(for_clustering_df)==1:
@@ -179,9 +179,9 @@ class PaperClusterer:
                 #clustered_df.to_csv(cluster_out_path, index=False, sep='\t')
                 
                 
-                print("handled {} papers".format(i*100))
+                #print("handled {} papers".format(i*100))
                 end_time=time()
-                print("iteration time: {}".format(end_time-start_time))
+                #print("iteration time: {}".format(end_time-start_time))
                 res.extend(cluster_rows_lst)
                 res.extend(self.report_missing_pmids(still_missing_ids_df))
                 cluster_dfs.extend([r[1] for r in rows_and_cluster_dfs_lst])
@@ -274,7 +274,7 @@ class PaperClusterer:
         inst_sim=self.inst_similarity(df)
 
         email_sim=self.email_similarity(df)
-        print(df[["pmid","last_author_email","email_clean"]])
+        #print(df[["pmid","last_author_email","email_clean"]])
         country_sim=self.country_similarity(df) 
 
         import seaborn  as sns
@@ -334,7 +334,7 @@ class PaperClusterer:
                       "email":email_sim,
                       "country":country_sim,
                       "forename":forename_sim}
-        print("sim matrices shapes for author and mesh:")
+        #print("sim matrices shapes for author and mesh:")
         num_items=len(df)*len(df)
         feat_df=pd.DataFrame({"author":author_sim.reshape(num_items,),
                               "mesh":mesh_sim.reshape(num_items,),
@@ -347,18 +347,18 @@ class PaperClusterer:
         if just_sim_matrix_flag:
             return feat_df
         
-        print("correlations:")
-        print(feat_df.corr())
+        #print("correlations:")
+        #print(feat_df.corr())
 
-        print("similarity statistics:")
-        print(feat_df.describe())
+        #print("similarity statistics:")
+        #print(feat_df.describe())
 
     
 
         combined_sim=self.combine_similarities(similarities)
         combined_dist=self.sim_to_dist(combined_sim)
         combined_dist_vector=combined_dist.reshape(num_items,)
-        print(pd.Series(combined_dist_vector).describe())
+        #print(pd.Series(combined_dist_vector).describe())
 
         return combined_dist,combined_sim
 
@@ -454,7 +454,7 @@ class PaperClusterer:
         key_set.remove("forename")
         weighted_sims=[gammas[k]*similarity_map[k] for k in key_set]
         aa=[w.shape for w in weighted_sims]
-        print(aa)
+        #print(aa)
         avg_sim=np.sum(w for w in weighted_sims)
         sim=np.minimum(avg_sim, similarity_map["forename"])
         return sim
