@@ -48,7 +48,7 @@ class PaperClusterer:
             cluster_dfs=rows_and_cluster_dfs_lst
             return res_df, cluster_dfs
 
-    def get_dist_matrix(self, author_papers_df):
+    def get_dist_matrix(self, author_papers_df, just_sim_matrix_flag = False):
             """
             Starting author dataframe (papers written by people with the same name)
             and running clutering to get researcher id, institute etc. 
@@ -60,7 +60,9 @@ class PaperClusterer:
             author_papers_df=self.paper_source.add_processed_fields(author_papers_df)
             print("author_papers_df affiliation:")
             print(author_papers_df[["pmid","last_author_name","last_author_inst"]])
-            combined_dist, for_clustering_df, combined_sim =self.process_features_to_dist(author_papers_df)
+            if just_sim_matrix_flag:
+                return self.process_feautures_to_dist(authors_papers_df, True)
+            combined_dist, for_clustering_df, combined_sim =self.process_features_to_dist(author_papers_df, False)
             print("***")
             print(for_clustering_df['weight'])
             for_clustering_df=self.cluster_by_sim(combined_dist,for_clustering_df)
@@ -113,7 +115,7 @@ class PaperClusterer:
         res["last_author_inst"]=cluster_row["last_author_inst"]
         return res
 
-    def process_features_to_dist(self, author_papers_df):
+    def process_features_to_dist(self, author_papers_df, just_sim_matrix_flag = False):
         debug=False
         for_clustering_df=author_papers_df
         for_clustering_df.loc[:, "weight"]=1
@@ -124,7 +126,9 @@ class PaperClusterer:
         if len(for_clustering_df)==1:
             for_clustering_df.loc[:, "db_cluster"]=0
         else:
-                combined_dist, combined_sim =self.build_distance_matrix(for_clustering_df)
+            if just_sim_matrix_flag:
+                return self.build_distance_matrix(for_clustering_df, True)
+            combined_dist, combined_sim =self.build_distance_matrix(for_clustering_df, False)
         return combined_dist, for_clustering_df, combined_sim
         
 
