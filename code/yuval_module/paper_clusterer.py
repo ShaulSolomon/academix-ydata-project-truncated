@@ -61,7 +61,7 @@ class PaperClusterer:
             print("author_papers_df affiliation:")
             print(author_papers_df[["pmid","last_author_name","last_author_inst"]])
             if just_sim_matrix_flag:
-                return self.process_feautures_to_dist(authors_papers_df, True)
+                return self.process_features_to_dist(authors_papers_df, True)
             combined_dist, for_clustering_df, combined_sim =self.process_features_to_dist(author_papers_df, False)
             print("***")
             print(for_clustering_df['weight'])
