@@ -352,3 +352,7 @@ code/academix_enriched.csv
 code/academix_enriched.pkl
 code/academix_not_enriched.csv
 code/academix_not_enriched.pkl
+
+
+#Data Files
+data/
