@@ -356,3 +356,7 @@ code/academix_not_enriched.pkl
 
 #Data Files
 data/
+venv/
+.vscode/
+.idea/
+.git/

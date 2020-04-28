@@ -42,11 +42,9 @@ class PaperSource:
         
     def clean_email(self, orig_email):
         try:
-            if orig_email is None or pd.isnull(orig_email):
-                return ""
             if isinstance(orig_email, str):
                 return orig_email
-            if isinstance(orig_email, list):
+            elif isinstance(orig_email, list):
                 l = len(orig_email)
                 if l==0:
                     return ""
@@ -54,6 +52,8 @@ class PaperSource:
                     return orig_email[0]
                 else:
                     return orig_email[-1]
+            elif orig_email is None or pd.isnull(orig_email):
+                return ""
         except ValueError as e:
             print(e)
             print("could not process {}".format(orig_email))
