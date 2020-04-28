@@ -2,6 +2,10 @@
 
 import os, re, sys
 
+CWD = 'c:\\Users\\shaul\\Documents\\GitHub\\academix-ydata-project\\code'
+if os.getcwd() != CWD:
+    os.chdir("./code/")
+
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key
 from boto import s3
@@ -85,24 +89,33 @@ def get_similarity_matrix(ps,authors_dfs):
   
   print("Removing Doubles")
   #Get all possible pairs of combination expressed in "AA", "AB", etc.
+  # pairs = []
+  # for i in range(num_papers):
+  #   outer_index = chr(65+i)
+  #   for j in range(num_papers):
+  #     inner_index = chr(65 + j)
+  #     pairs.append(outer_index + inner_index)
+
+  # #join it back to sim_matrix
+  # sim_matrix['pairs'] = [pair for pair in pairs]
+
+  # split_pairs = [list(pair) for pair in pairs]
+  # #keep instance only where N_i x N_j (where i < j, which includes i == j and i < j)
+  # split_pairs = ["".join(pair) for pair in split_pairs if ord(pair[0]) < ord(pair[1])]
+  # #filter matrix
+  # sim_matrix = sim_matrix.loc[sim_matrix['pairs'].isin(split_pairs)]
+  # sim_matrix.set_index("pairs",inplace=True)
   pairs = []
   for i in range(num_papers):
-    outer_index = chr(65+i)
     for j in range(num_papers):
-      inner_index = chr(65 + j)
-      pairs.append(outer_index + inner_index)
+      if (i<j):
+        pairs.append(True)
+      else:
+        pairs.append(False)
 
-  #join it back to sim_matrix
-  sim_matrix['pairs'] = [pair for pair in pairs]
+  sim_matrix = sim_matrix.iloc[pairs]
 
-  split_pairs = [list(pair) for pair in pairs]
-  #keep instance only where N_i x N_j (where i < j, which includes i == j and i < j)
-  split_pairs = ["".join(pair) for pair in split_pairs if ord(pair[0]) < ord(pair[1])]
-  #filter matrix
-  sim_matrix = sim_matrix.loc[sim_matrix['pairs'].isin(split_pairs)]
-  sim_matrix.set_index("pairs",inplace=True)
-
-  print("Returning Similarity Matrix:")
+  print("Returning Similarity Matrix.")
   return sim_matrix
 
 def get_train_test(df,perc_change = 0.8):
@@ -130,22 +143,27 @@ def log_model(X_train,y_train,X_test,y_test):
   return pred_prob
 
 if __name__ == "__main__":
+  CWD = 'c:\\Users\\shaul\\Documents\\GitHub\\academix-ydata-project\\code'
+  if os.getcwd() != CWD:
+      os.chdir("./code/")
 
-    os.chdir("./code/")
-    if os.path.exists(PATH + FILE):
-        print("READING FROM LOCAL")
-        df = pd.read_json(PATH+ FILE)
-        ps = PaperSource()
-    else:
-        print("PULLING FROM S3")
-        ps = load_dataset("enriched_labeled")
-        df = ps.get_dataset()
+  if os.path.exists(PATH + FILE):
+      print("READING FROM LOCAL")
+      df = pd.read_json(PATH+ FILE)
+      ps = PaperSource()
+  else:
+      print("PULLING FROM S3")
+      ps = load_dataset("enriched_labeled")
+      df = ps.get_dataset()
 
-    df.drop(columns="last_author_country",inplace=True)
-    df.rename(columns={'ORG_STATE':'last_author_country'},inplace=True)
+  df.drop(columns="last_author_country",inplace=True)
+  df.rename(columns={'ORG_STATE':'last_author_country'},inplace=True)
 
-    #Get unique authors
-    df = top_N_indie_authors(df,5)
-    df = get_similarity_matrix(ps,df)
-    
-    
+  #Get unique authors
+  df = top_N_indie_authors(df,5)
+  df = get_similarity_matrix(ps,df)
+  X_train, y_train, X_test, y_test = get_train_test(df,0.8)
+  y_hat = log_model(X_train,y_train,X_test,y_test)
+  plt.hist(y_hat,bins=50)
+  
+  
