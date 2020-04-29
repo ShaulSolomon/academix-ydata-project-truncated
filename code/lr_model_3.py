@@ -19,8 +19,6 @@ from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
 from collections import defaultdict
 
-
-
 import pandas as pd
 import numpy as np
 #import s3_functions as s3func
@@ -49,12 +47,15 @@ def get_res_papers(ps,author_name):
 
 def top_N_indie_authors(df,N=5, start_index=0, flag_DBS_authors = False):
     '''
+    Finds for us the most published authors to use them in our dataset.
+
     input: df - dataframe of all pmid with all relevent details
            start_index - where to start from, regarding authors
            N - number of authors to take  
            flag_DBS_authors - flag to see if want to take authors for the DBScan
 
     output: dataframe with the top N publishers who we know do not have name disambiguation
+            If flag_DBS_authors = True, we also take the authors we want for the DBScan
     '''
     #To stay safe, only use authors without disambiguation
     unique_authors = df.groupby('last_author_name')[["PI_IDS"]].nunique()
@@ -71,6 +72,25 @@ def top_N_indie_authors(df,N=5, start_index=0, flag_DBS_authors = False):
 
 
 def get_similarity_matrix(ps,authors_dfs,flag_remove_doubles = True):
+  '''
+  Using Yuval's code, we take the dataframe, and for:
+  `Authors, Mesh, Forenames, Institutions, Emails, Countries`
+  We compute similarities and return a similarity matrix.
+
+  If flag_remove_doubles = True, we are trying to train the LR model, and therefore want to make sure we don't
+  have any duplicates.
+
+  If flag_remove_doubles = False, we are trying to get a distance matrix for the DBScan and need the 
+  duplicates, because the algorithm takes a square matrix.
+
+  Input: 
+  ps - PaperSource instance
+  authors_dfs - Dataframe of all features for given authors
+  flag_remove_double - flag whether to delete duplicates
+
+  Output:
+  sim_matrix - Matrix based off the similarity of features for given pairs of documents.
+  '''
 
   ### --- Getting general similarity matrix --- ###
 
@@ -119,12 +139,24 @@ def get_similarity_matrix(ps,authors_dfs,flag_remove_doubles = True):
   return sim_matrix
 
 def get_train_test(df,perc_change = 0.8):
-  #Get equal number of same and different for Logistic Regression
+  '''
+  Splits the dataframe into Train and Test data, splitting with `perc_change` %.
+  To keep a balance of the data, we take the same # of same author pairs to the # of dif author pairs
+  The dif author pairs is random, to protect against overfitting.
 
+  Input:
+  df - dataframe with all the data
+  perc_change - percentage of data to be in Train set
+
+  Output:
+  X_train, y_train, X_test, y_test
+  '''
+  #Get equal number of same and different for Logistic Regression
   df_same = df[df['same_author'] == 0]
   df_dif = df[df['same_author'] == 1]
   num_dif = len(df_dif.index)
   num_same = len(df_same.index)
+  #Randomize which pairs to take
   idx_rand = list(np.random.choice(range(num_dif),num_same,replace=False))
   df_dif = df_dif.iloc[idx_rand]
 
@@ -140,8 +172,15 @@ def sigmoid(x):
 
 def log_model(X_train,y_train,X_test,y_test):
   '''
-  input: X_train, y_train, X_test, y_test
-  return: Score, predict_prob
+  Learns the best Logistic Regression model using GridSearhCV, and then implements it on the test data.
+
+  input: 
+  X_train, y_train, X_test, y_test
+
+  return: 
+  Score - Vanilla score provided by the clf.score() method. In LogR, its accuracy.
+  Predict_prob - For the X_test data, get what their value would be with weights (and bias) of LogR model.
+  best_model - the clf model we created.
   '''
   penalty = ['l1', 'l2']
   # Create regularization hyperparameter space
@@ -155,70 +194,45 @@ def log_model(X_train,y_train,X_test,y_test):
   best_C = best_model.best_estimator_.get_params()['C']
   print('Best Penalty:', best_penalty)
   print('Best C:', best_C)
-  predict_prob = get_weights(X_test,best_model)
+  predict_prob = apply_weights(X_test,best_model)
   score = clf.score(X_test,y_test)
   return score, predict_prob, best_model
 
-def get_weights(X_test, best_model):
+def apply_weights(X_test, best_model):
+  '''
+  Applies the weights and bias to X_test data.
+
+  input:
+  X_test
+  best_model - model learned from the training data
+
+  output:
+  predict_prob - guesses for each X_test
+  '''
   weights = best_model.best_estimator_.coef_.flatten()
   bias = best_model.best_estimator_.intercept_.flatten()
   predict_prob = [sigmoid(np.dot(x_test,weights) + bias[0]) for x_test in X_test.to_numpy()]
   return predict_prob
 
 def get_dist_matrix(ps,df,model):
+  '''
+  Get the estimated LogR value for each doc pair.
+
+  input:
+  ps - Papersource instance
+  df - dataframe
+  model - LogR model
+
+  output:
+  sim_matrix - Similarity Matrix
+  '''
   df_sim = get_similarity_matrix(ps,df,False)
   X_feat = df_sim.iloc[:,:-1]
-  X_feat_weights = get_weights(X_feat,model)
+  X_feat_weights = apply_weights(X_feat,model)
   num_paper = int(np.sqrt(len(X_feat_weights)))
+  #Need a square matrix for DBScan
   sim_matrix = np.array(X_feat_weights).reshape(num_paper,-1)
   return sim_matrix
-
-def assign_labels_to_clusters(df_core, num_clusters):
-  K_dict = dict()
-  set_of_clusters = set(num_clusters)
-  #get pi_ids sorted by most productive
-  pi_id_sorted = list(df_core.groupby('PI_IDS').size().sort_values(ascending=False).reset_index()['PI_IDS'])
-  for pi_id in pi_id_sorted:
-    #Get most popular clusters for each id
-    cluster_for_id = [c_id for c_id, _ in Counter(df_core[df_core['PI_IDS'] == pi_id].cluster_pred).most_common()]
-    for c in cluster_for_id:
-      if c not in set_of_clusters:
-        continue
-      else:
-        K_dict[pi_id] = c
-        set_of_clusters.remove(c)
-        break
-
-  df_core['cluster_assigned'] = [K_dict[pid] for pid in df_core.PI_IDS]
-  return df_core
-
-def get_metrics(df):
-  print("Precision score: {}, Recall score: {}".format(precision_score(df.cluster_assigned,df.cluster_pred,average='micro'),
-                                                       recall_score(df.cluster_assigned,df.cluster_pred,average='micro')))
-  mis_intergration_dict = defaultdict(int)
-  mis_separation_dict = defaultdict(int)
-
-  for clus_sep in df.groupby('PI_IDS')['cluster_pred'].nunique():
-    mis_separation_dict[clus_sep] += 1
-  mis_separation_dict = dict(mis_separation_dict)
-  # total = sum(mis_separation_dict.values())
-  # for key in mis_separation_dict.keys():
-  #   mis_separation_dict[key] /= total
-
-  print("Mis-Separation: ", mis_separation_dict)
-
-
-  for clus_int in df.groupby('cluster_assigned')['cluster_pred'].nunique():
-    mis_intergration_dict[clus_int] += 1
-  mis_intergration_dict = dict(mis_intergration_dict)
-  # total = sum(mis_intergration_dict.values())
-  # for key in mis_intergration_dict.keys():
-  #   mis_intergration_dict[key] /= total
-
-  print("Mis-Integration: ",mis_intergration_dict)
-
-  
-
 
 
 if __name__ == "__main__":
