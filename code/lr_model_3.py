@@ -13,6 +13,12 @@ import boto3
 import importlib
 import math
 from sklearn.model_selection import GridSearchCV
+from sklearn.cluster import DBSCAN as DBS
+from collections import Counter 
+from sklearn.metrics import precision_score
+from sklearn.metrics import recall_score
+from collections import defaultdict
+
 
 
 import pandas as pd
@@ -41,21 +47,30 @@ def get_res_papers(ps,author_name):
     return df[df['last_author_name']==author_name]
 
 
-def top_N_indie_authors(df,N=5):
+def top_N_indie_authors(df,N=5, start_index=0, flag_DBS_authors = False):
     '''
     input: df - dataframe of all pmid with all relevent details
-            N - number of authors to take
+           start_index - where to start from, regarding authors
+           N - number of authors to take  
+           flag_DBS_authors - flag to see if want to take authors for the DBScan
 
     output: dataframe with the top N publishers who we know do not have name disambiguation
     '''
+    #To stay safe, only use authors without disambiguation
     unique_authors = df.groupby('last_author_name')[["PI_IDS"]].nunique()
     unique_authors = unique_authors[unique_authors["PI_IDS"] == 1].index
-    top_N_authors = list(df[df['last_author_name'].isin(unique_authors)].groupby('last_author_name')['pmid'].nunique().sort_values(ascending=False)[:N].index)
+    #Get top N
+    top_N_authors = list(df[df['last_author_name'].isin(unique_authors)].groupby('last_author_name')['pmid'].nunique().sort_values(ascending=False)[start_index:N+start_index].index)
     df_authors = df[df['last_author_name'].isin(top_N_authors)]
-    return df_authors
+    if flag_DBS_authors:
+      DB_authors = list(df[df['last_author_name'].isin(unique_authors)].groupby('last_author_name')['pmid'].nunique().sort_values(ascending=False)[:start_index].index)
+      df_dbscan = df[df['last_author_name'].isin(DB_authors)]
+      return df_authors, df_dbscan
+    else:
+      return df_authors
 
 
-def get_similarity_matrix(ps,authors_dfs):
+def get_similarity_matrix(ps,authors_dfs,flag_remove_doubles = True):
 
   ### --- Getting general similarity matrix --- ###
 
@@ -84,18 +99,20 @@ def get_similarity_matrix(ps,authors_dfs):
   sim_matrix['same_author'] = pair_col
 
   ### --- Removing Pairs --- ###
-  
-  print("Removing Doubles")
+  if flag_remove_doubles:
+    print("Removing Doubles")
 
-  pairs = []
-  for i in range(num_papers):
-    for j in range(num_papers):
-      if (i<j):
-        pairs.append(True)
-      else:
-        pairs.append(False)
+    pairs = []
+    for i in range(num_papers):
+      for j in range(num_papers):
+        if (i<j):
+          pairs.append(True)
+        else:
+          pairs.append(False)
 
-  sim_matrix = sim_matrix.iloc[pairs]
+    sim_matrix = sim_matrix.iloc[pairs]
+  else:
+    print("Keeping Doubles")
 
   print("Returning Similarity Matrix.")
   print("Number of pairs after cleaning: ", len(sim_matrix.index))
@@ -138,12 +155,71 @@ def log_model(X_train,y_train,X_test,y_test):
   best_C = best_model.best_estimator_.get_params()['C']
   print('Best Penalty:', best_penalty)
   print('Best C:', best_C)
+  predict_prob = get_weights(X_test,best_model)
+  score = clf.score(X_test,y_test)
+  return score, predict_prob, best_model
+
+def get_weights(X_test, best_model):
   weights = best_model.best_estimator_.coef_.flatten()
   bias = best_model.best_estimator_.intercept_.flatten()
-  print("Calculating predict probability")
   predict_prob = [sigmoid(np.dot(x_test,weights) + bias[0]) for x_test in X_test.to_numpy()]
-  score = clf.score(X_test,y_test)
-  return score, predict_prob
+  return predict_prob
+
+def get_dist_matrix(ps,df,model):
+  df_sim = get_similarity_matrix(ps,df,False)
+  X_feat = df_sim.iloc[:,:-1]
+  X_feat_weights = get_weights(X_feat,model)
+  num_paper = int(np.sqrt(len(X_feat_weights)))
+  sim_matrix = np.array(X_feat_weights).reshape(num_paper,-1)
+  return sim_matrix
+
+def assign_labels_to_clusters(df_core, num_clusters):
+  K_dict = dict()
+  set_of_clusters = set(num_clusters)
+  #get pi_ids sorted by most productive
+  pi_id_sorted = list(df_core.groupby('PI_IDS').size().sort_values(ascending=False).reset_index()['PI_IDS'])
+  for pi_id in pi_id_sorted:
+    #Get most popular clusters for each id
+    cluster_for_id = [c_id for c_id, _ in Counter(df_core[df_core['PI_IDS'] == pi_id].cluster_pred).most_common()]
+    for c in cluster_for_id:
+      if c not in set_of_clusters:
+        continue
+      else:
+        K_dict[pi_id] = c
+        set_of_clusters.remove(c)
+        break
+
+  df_core['cluster_assigned'] = [K_dict[pid] for pid in df_core.PI_IDS]
+  return df_core
+
+def get_metrics(df):
+  print("Precision score: {}, Recall score: {}".format(precision_score(df.cluster_assigned,df.cluster_pred,average='micro'),
+                                                       recall_score(df.cluster_assigned,df.cluster_pred,average='micro')))
+  mis_intergration_dict = defaultdict(int)
+  mis_separation_dict = defaultdict(int)
+
+  for clus_sep in df.groupby('PI_IDS')['cluster_pred'].nunique():
+    mis_separation_dict[clus_sep] += 1
+  mis_separation_dict = dict(mis_separation_dict)
+  # total = sum(mis_separation_dict.values())
+  # for key in mis_separation_dict.keys():
+  #   mis_separation_dict[key] /= total
+
+  print("Mis-Separation: ", mis_separation_dict)
+
+
+  for clus_int in df.groupby('cluster_assigned')['cluster_pred'].nunique():
+    mis_intergration_dict[clus_int] += 1
+  mis_intergration_dict = dict(mis_intergration_dict)
+  # total = sum(mis_intergration_dict.values())
+  # for key in mis_intergration_dict.keys():
+  #   mis_intergration_dict[key] /= total
+
+  print("Mis-Integration: ",mis_intergration_dict)
+
+  
+
+
 
 if __name__ == "__main__":
   CWD = 'c:\\Users\\shaul\\Documents\\GitHub\\academix-ydata-project\\code'
@@ -166,6 +242,6 @@ if __name__ == "__main__":
   df = top_N_indie_authors(df,12)
   df = get_similarity_matrix(ps,df)
   X_train, y_train, X_test, y_test = get_train_test(df,0.8)
-  score, y_hat = log_model(X_train,y_train,X_test,y_test)
+  score, y_hat,_ = log_model(X_train,y_train,X_test,y_test)
   print(score)
   
