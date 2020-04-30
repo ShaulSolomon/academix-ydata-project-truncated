@@ -3,8 +3,8 @@
 import os, re, sys
 
 CWD = 'c:\\Users\\shaul\\Documents\\GitHub\\academix-ydata-project\\code'
-if os.getcwd() != CWD:
-    os.chdir("./code/")
+# if os.getcwd() != CWD:
+#     os.chdir("./code/")
 
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key
@@ -32,8 +32,10 @@ from yuval_module.paper_source import PaperSource
 from sklearn.linear_model import LogisticRegression as LogR
 
 #%matplotlib inline
+import utils as utils
+from utils import PROJECT_ROOT
 
-PATH = "C:/Users/shaul/Documents/GitHub/academix-ydata-project/data/labeled_data/"
+PATH = PROJECT_ROOT+ "data/labeled_data/"
 FILE = "enriched_labeled_dataset.json"
 
 def load_dataset(set_name):

@@ -12,7 +12,7 @@ from time import time, sleep
 import pandas as pd
 import numpy as np
 from pandas.io.json import json_normalize
-import s3_functions as s3func
+import utils as s3func
 #from elastic_index.balsamic.identify_inst_state import Grid
 
 class PaperSource:
