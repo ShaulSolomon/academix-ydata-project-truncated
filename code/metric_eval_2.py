@@ -56,8 +56,8 @@ def get_metrics(df):
   print("Number of clusters (DBS): {}\nNumber of unique authors: {}".format(num_clusters_db,
                                                                                                             num_authors))
 
-  print("Precision score: {}, Recall score: {}".format(precision_score(df.cluster_assigned,df.cluster_pred,average='micro'),
-                                                       recall_score(df.cluster_assigned,df.cluster_pred,average='micro')))
+  print("Precision score: {}, Recall score: {}".format(precision_score(df.cluster_assigned,df.cluster_pred,average='weighted'),
+                                                       recall_score(df.cluster_assigned,df.cluster_pred,average='weighted')))
   mis_intergration_dict = dict()
   mis_separation_dict = dict()
 
