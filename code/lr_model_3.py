@@ -47,31 +47,35 @@ def get_res_papers(ps,author_name):
     return df[df['last_author_name']==author_name]
 
 
-def top_N_indie_authors(df,N=5, start_index=0, flag_DBS_authors = False):
-    '''
-    Finds for us the most published authors to use them in our dataset.
 
-    input: df - dataframe of all pmid with all relevent details
-           start_index - where to start from, regarding authors
-           N - number of authors to take  
-           flag_DBS_authors - flag to see if want to take authors for the DBScan
+def top_authors(df, use_case):
+  '''
+  Finds for us the most published authors to use them in our dataset.
 
-    output: dataframe with the top N publishers who we know do not have name disambiguation
-            If flag_DBS_authors = True, we also take the authors we want for the DBScan
-    '''
-    #To stay safe, only use authors without disambiguation
+  input:
+  df - dataframe with all the data stored
+  use_case - possible use-cases:
+    0) Base case (top 15 authors) // use_case = "base"
+    1) 3 distinct authors (each having ~30 papers) // use_case = "3_dist_auth" 
+    2) 2 distinct authors (one with ~30 papers, the other with ~10 papers) // use_case = "2_dist_dif_auth"
+    3) 3 authors that share the same name (together has 50 papers) // use_case =  "1_auth"
+  '''
+  unique_authors = df.groupby('last_author_name')[["PI_IDS"]].nunique()
+  unique_authors = unique_authors[unique_authors["PI_IDS"] == 1].index
+  indie_authors = df[df['last_author_name'].isin(unique_authors)].groupby('last_author_name')['pmid'].nunique().sort_values(ascending=False)
+  if use_case == "base":
+    indie_author = list(indie_authors.index)[:15]
+  elif use_case == "3_dist_auth":
+    indie_author = list(indie_authors.index)[15:18]
+  elif use_case == "2_dist_dif_auth":
+    indie_author = list(indie_authors.index)
+    indie_author = [indie_author[15]] + [indie_author[1050]]
+  elif use_case == "1_auth":
     unique_authors = df.groupby('last_author_name')[["PI_IDS"]].nunique()
-    unique_authors = unique_authors[unique_authors["PI_IDS"] == 1].index
-    #Get top N
-    top_N_authors = list(df[df['last_author_name'].isin(unique_authors)].groupby('last_author_name')['pmid'].nunique().sort_values(ascending=False)[start_index:N+start_index].index)
-    df_authors = df[df['last_author_name'].isin(top_N_authors)]
-    if flag_DBS_authors:
-      DB_authors = list(df[df['last_author_name'].isin(unique_authors)].groupby('last_author_name')['pmid'].nunique().sort_values(ascending=False)[:start_index].index)
-      df_dbscan = df[df['last_author_name'].isin(DB_authors)]
-      return df_authors, df_dbscan
-    else:
-      return df_authors
-
+    unique_authors = unique_authors[unique_authors["PI_IDS"] == 3].index
+    indie_authors = df[df['last_author_name'].isin(unique_authors)].groupby('last_author_name')['pmid'].nunique().sort_values(ascending=False)
+    indie_author = [list(indie_authors.index)[0]]
+  return df[df["last_author_name"].isin(indie_author)]
 
 def get_similarity_matrix(ps,authors_dfs,flag_remove_doubles = True):
   '''
@@ -101,7 +105,7 @@ def get_similarity_matrix(ps,authors_dfs,flag_remove_doubles = True):
 
   print("Building Same Author Column")
   #get similarity column
-  author_list = list(authors_dfs['last_author_name'])
+  author_list = list(authors_dfs['PI_IDS'])
   pair_col = []
 
   for i in range(num_papers):
@@ -164,6 +168,8 @@ def get_train_test(df,perc_change = 0.8):
 
   perc_train = int(len(df_dif.index)*perc_change)
 
+  print("There are {} pairs being used, half of them with the same author, {} of them as train data".format(num_same*2,perc_train*2))
+
   train_df = pd.concat((df_same[:perc_train],df_dif[:perc_train]))
   test_df = pd.concat((df_same[perc_train:],df_dif[perc_train:]))
   return train_df.iloc[:,:-1] , train_df.iloc[:,-1], test_df.iloc[:,:-1], test_df.iloc[:,-1]
@@ -184,7 +190,7 @@ def log_model(X_train,y_train,X_test,y_test):
   Predict_prob - For the X_test data, get what their value would be with weights (and bias) of LogR model.
   best_model - the clf model we created.
   '''
-  penalty = ['l1', 'l2']
+  penalty = ['l1', 'l2','elasticnet']
   # Create regularization hyperparameter space
   C = np.logspace(0, 4, 10)
   # Create hyperparameter options
@@ -216,7 +222,7 @@ def apply_weights(X_test, best_model):
   predict_prob = [sigmoid(np.dot(x_test,weights) + bias[0]) for x_test in X_test.to_numpy()]
   return predict_prob
 
-def get_dist_matrix(ps,df,model):
+def get_dist_matrix(ps,df,model,flag_no_country = False):
   '''
   Get the estimated LogR value for each doc pair.
 
@@ -224,12 +230,15 @@ def get_dist_matrix(ps,df,model):
   ps - Papersource instance
   df - dataframe
   model - LogR model
+  flag_no_country - flag if we want to include country similarity as feature
 
   output:
   sim_matrix - Similarity Matrix
   '''
   df_sim = get_similarity_matrix(ps,df,False)
   X_feat = df_sim.iloc[:,:-1]
+  if flag_no_country:
+    X_feat.drop(columns="country",inplace=True)
   X_feat_weights = apply_weights(X_feat,model)
   num_paper = int(np.sqrt(len(X_feat_weights)))
   #Need a square matrix for DBScan
