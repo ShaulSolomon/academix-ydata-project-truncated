@@ -21,6 +21,9 @@ s3_dict = config_parser["S3"]
 AWS_ACCESS_KEY = s3_dict['AWS_ACCESS_KEY']
 AWS_ACCESS_SECRET_KEY = s3_dict['AWS_ACCESS_SECRET_KEY']
 BUCKET = s3_dict['BUCKET']
+### LOCAL_PATHS ##
+LOCAL_PATHS =config_parser["LOCAL_PATHS"]
+PROJECT_ROOT=LOCAL_PATHS['PROJECT_ROOT']
 #####
 
 

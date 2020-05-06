@@ -12,6 +12,7 @@ from yuval_module.paper_source import PaperSource
 
 class PaperClusterer:
     def __init__(self, eps=1.37):
+        
         self.paper_source = PaperSource()
         self.cur_researcher_id=self.paper_source.cur_researcher_id #first free researcher id
         self.cached_researchers={}
@@ -265,75 +266,79 @@ class PaperClusterer:
         return clustering.labels_
 
     def build_distance_matrix(self, df, just_sim_matrix_flag = False):
+        print("Comparing Authors")
         author_sim=self.get_author_similarity(df)
+        print("Comparing Mesh")
         mesh_sim=self.get_mesh_similarity(df)
         # print("forenames:")
         # print(df["last_author.forename"])
+        print("Comparing Forenames")
         forename_sim=self.forename_similarity(df)
-
+        print("Comparing Institutions")
         inst_sim=self.inst_similarity(df)
-
+        print("Comparing Emails")
         email_sim=self.email_similarity(df)
         #print(df[["pmid","last_author_email","email_clean"]])
+        print("Comparing Countries")
         country_sim=self.country_similarity(df) 
 
-        import seaborn  as sns
-        import matplotlib.pyplot as plt
-        f,(ax1,ax2,ax3,ax4,ax5,ax6, axcb) = plt.subplots(1,7, 
-                    gridspec_kw={'width_ratios':[1,1,1,1,1,1,0.08]})
-        ax1.get_shared_y_axes().join(ax2,ax3,ax4,ax5,ax6)
-        g1 = sns.heatmap(author_sim,
-                        cmap="YlGnBu",
-                        cbar=False,
-                        ax=ax1,
-                        xticklabels=df.pmid,
-                        yticklabels=df.pmid)
-        g1.set_ylabel('')
-        g1.set_xlabel('author')
-        g2 = sns.heatmap(mesh_sim,
-        cmap="YlGnBu",
-        cbar=False,
-        ax=ax2,
-        xticklabels=df.pmid,
-        yticklabels=df.pmid
-        )
-        g2.set_ylabel('')
-        g2.set_xlabel('mesh')
-        g2.set_yticks([])
-        g3 = sns.heatmap(inst_sim,cmap="YlGnBu",ax=ax3, cbar_ax=axcb)
-        g3.set_ylabel('')
-        g3.set_xlabel('inst')
-        g3.set_yticks([])
-        g4 = sns.heatmap(email_sim,cmap="YlGnBu",ax=ax4, cbar_ax=axcb)
-        g4.set_ylabel('')
-        g4.set_xlabel('email')
-        g3.set_yticks([])
-        g5= sns.heatmap(country_sim,cmap="YlGnBu",ax=ax5, cbar_ax=axcb)
-        g5.set_ylabel('')
-        g5.set_xlabel('country')
-        g5.set_yticks([])
-        g6 = sns.heatmap(forename_sim,cmap="YlGnBu",ax=ax6, cbar_ax=axcb)
-        g6.set_ylabel('')
-        g6.set_xlabel('forename')
-        g6.set_yticks([])
+        # import seaborn  as sns
+        # import matplotlib.pyplot as plt
+        # #f,(ax1,ax2,ax3,ax4,ax5,ax6, axcb) = plt.subplots(1,7, 
+        #             gridspec_kw={'width_ratios':[1,1,1,1,1,1,0.08]})
+        # ax1.get_shared_y_axes().join(ax2,ax3,ax4,ax5,ax6)
+        # g1 = sns.heatmap(author_sim,
+        #                 cmap="YlGnBu",
+        #                 cbar=False,
+        #                 ax=ax1,
+        #                 xticklabels=df.pmid,
+        #                 yticklabels=df.pmid)
+        # g1.set_ylabel('')
+        # g1.set_xlabel('author')
+        # g2 = sns.heatmap(mesh_sim,
+        # cmap="YlGnBu",
+        # cbar=False,
+        # ax=ax2,
+        # xticklabels=df.pmid,
+        # yticklabels=df.pmid
+        # )
+        # g2.set_ylabel('')
+        # g2.set_xlabel('mesh')
+        # g2.set_yticks([])
+        # g3 = sns.heatmap(inst_sim,cmap="YlGnBu",ax=ax3, cbar_ax=axcb)
+        # g3.set_ylabel('')
+        # g3.set_xlabel('inst')
+        # g3.set_yticks([])
+        # g4 = sns.heatmap(email_sim,cmap="YlGnBu",ax=ax4, cbar_ax=axcb)
+        # g4.set_ylabel('')
+        # g4.set_xlabel('email')
+        # g3.set_yticks([])
+        # g5= sns.heatmap(country_sim,cmap="YlGnBu",ax=ax5, cbar_ax=axcb)
+        # g5.set_ylabel('')
+        # g5.set_xlabel('country')
+        # g5.set_yticks([])
+        # g6 = sns.heatmap(forename_sim,cmap="YlGnBu",ax=ax6, cbar_ax=axcb)
+        # g6.set_ylabel('')
+        # g6.set_xlabel('forename')
+        # g6.set_yticks([])
 
-        # may be needed to rotate the ticklabels correctly:
-        for ax in [g1,g2,g3,g4,g5,g6]:
-            tl = ax.get_xticklabels()
-            ax.set_xticklabels(tl, rotation=90)
-            tly = ax.get_yticklabels()
-            ax.set_yticklabels(tly, rotation=0)
+        # # may be needed to rotate the ticklabels correctly:
+        # for ax in [g1,g2,g3,g4,g5,g6]:
+        #     tl = ax.get_xticklabels()
+        #     ax.set_xticklabels(tl, rotation=90)
+        #     tly = ax.get_yticklabels()
+        #     ax.set_yticklabels(tly, rotation=0)
 
 
-        plt.show()
+        #plt.show()
 
 
         similarities={"author":author_sim,
                       "mesh":mesh_sim,
                       "inst":inst_sim,
                       "email":email_sim,
-                      "country":country_sim,
-                      "forename":forename_sim}
+                      "country":country_sim}
+                      #,"forename":forename_sim}
         #print("sim matrices shapes for author and mesh:")
         num_items=len(df)*len(df)
         feat_df=pd.DataFrame({"author":author_sim.reshape(num_items,),
