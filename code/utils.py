@@ -21,9 +21,11 @@ s3_dict = config_parser["S3"]
 AWS_ACCESS_KEY = s3_dict['AWS_ACCESS_KEY']
 AWS_ACCESS_SECRET_KEY = s3_dict['AWS_ACCESS_SECRET_KEY']
 BUCKET = s3_dict['BUCKET']
+
 ### LOCAL_PATHS ##
 LOCAL_PATHS =config_parser["LOCAL_PATHS"]
 PROJECT_ROOT=LOCAL_PATHS['PROJECT_ROOT']
+DATA_PATH = LOCAL_PATHS['DATA_PATH']
 #####
 
 
@@ -48,11 +50,11 @@ def get_dataframe_from_s3(AWS_ACCESS_KEY=AWS_ACCESS_KEY, AWS_ACCESS_SECRET_KEY=A
 
   # Retrieve Data
   key = mybucket.get_key(file)
-  key.get_contents_to_filename(file)
+  key.get_contents_to_filename(PROJECT_ROOT + '/data/' + file)
   if type=="json":
-          df = pd.read_json(file, orient="records")
+          df = pd.read_json(PROJECT_ROOT + '/data/' + file, orient="records")
   else:
-          df = pd.read_csv(file)
+          df = pd.read_csv(PROJECT_ROOT + '/data/' + file)
   return df
 
 
