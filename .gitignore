@@ -360,3 +360,4 @@ venv/
 .vscode/
 .idea/
 .git/
+code/credentenials.ini

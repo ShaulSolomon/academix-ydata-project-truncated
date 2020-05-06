@@ -1,16 +1,5 @@
 #Initializations
 
-import os, re, sys
-
-CWD = 'c:\\Users\\shaul\\Documents\\GitHub\\academix-ydata-project\\code'
-# if os.getcwd() != CWD:
-#     os.chdir("./code/")
-
-from boto.s3.connection import S3Connection
-from boto.s3.key import Key
-from boto import s3
-import boto3
-import importlib
 import math
 from sklearn.model_selection import GridSearchCV
 from sklearn.cluster import DBSCAN as DBS
@@ -18,6 +7,7 @@ from collections import Counter
 from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
 from collections import defaultdict
+import sim_matrix_3
 
 import pandas as pd
 import numpy as np
@@ -30,119 +20,6 @@ from yuval_module.paper_clusterer import PaperClusterer
 from yuval_module.paper_source import PaperSource
 
 from sklearn.linear_model import LogisticRegression as LogR
-
-#%matplotlib inline
-import utils as utils
-from utils import PROJECT_ROOT
-
-PATH = PROJECT_ROOT+ "data/labeled_data/"
-FILE = "enriched_labeled_dataset.json"
-
-def load_dataset(set_name):
-    ps=PaperSource()
-    ps.load_dataset(set_name)
-    return ps
-def get_res_papers(ps,author_name):
-    df=ps.get_dataset()
-    return df[df['last_author_name']==author_name]
-
-
-
-def top_authors(df, use_case):
-  '''
-  Finds for us the most published authors to use them in our dataset.
-
-  input:
-  df - dataframe with all the data stored
-  use_case - possible use-cases:
-    0) Base case (top 15 authors) // use_case = "base"
-    1) 3 distinct authors (each having ~30 papers) // use_case = "3_dist_auth" 
-    2) 2 distinct authors (one with ~30 papers, the other with ~10 papers) // use_case = "2_dist_dif_auth"
-    3) 3 authors that share the same name (together has 50 papers) // use_case =  "1_auth"
-  '''
-  unique_authors = df.groupby('last_author_name')[["PI_IDS"]].nunique()
-  unique_authors = unique_authors[unique_authors["PI_IDS"] == 1].index
-  indie_authors = df[df['last_author_name'].isin(unique_authors)].groupby('last_author_name')['pmid'].nunique().sort_values(ascending=False)
-  if use_case == "base":
-    indie_author = list(indie_authors.index)[:15]
-  elif use_case == "3_dist_auth":
-    indie_author = list(indie_authors.index)[15:18]
-  elif use_case == "2_dist_dif_auth":
-    indie_author = list(indie_authors.index)
-    indie_author = [indie_author[15]] + [indie_author[1050]]
-  elif use_case == "1_auth":
-    unique_authors = df.groupby('last_author_name')[["PI_IDS"]].nunique()
-    unique_authors = unique_authors[unique_authors["PI_IDS"] == 3].index
-    indie_authors = df[df['last_author_name'].isin(unique_authors)].groupby('last_author_name')['pmid'].nunique().sort_values(ascending=False)
-    indie_author = [list(indie_authors.index)[0]]
-  return df[df["last_author_name"].isin(indie_author)]
-
-def get_similarity_matrix(ps,authors_dfs,flag_remove_doubles = True):
-  '''
-  Using Yuval's code, we take the dataframe, and for:
-  `Authors, Mesh, Forenames, Institutions, Emails, Countries`
-  We compute similarities and return a similarity matrix.
-
-  If flag_remove_doubles = True, we are trying to train the LR model, and therefore want to make sure we don't
-  have any duplicates.
-
-  If flag_remove_doubles = False, we are trying to get a distance matrix for the DBScan and need the 
-  duplicates, because the algorithm takes a square matrix.
-
-  Input: 
-  ps - PaperSource instance
-  authors_dfs - Dataframe of all features for given authors
-  flag_remove_double - flag whether to delete duplicates
-
-  Output:
-  sim_matrix - Matrix based off the similarity of features for given pairs of documents.
-  '''
-
-  ### --- Getting general similarity matrix --- ###
-
-  num_papers = authors_dfs.shape[0]
-  print("Total number of papers: ", num_papers)
-
-  print("Building Same Author Column")
-  #get similarity column
-  author_list = list(authors_dfs['PI_IDS'])
-  pair_col = []
-
-  for i in range(num_papers):
-    for j in range(num_papers):
-      if author_list[i] == author_list[j]:
-        pair_col.append(0)
-      else:
-        pair_col.append(1)
-
-  print("Number of paper combinations (pre-cleaning) is: ", len(pair_col))
-  
-  print("Getting Similarities")
-  
-  paper_clusterer=PaperClusterer(eps=1.27)
-  #get dist matrix
-  sim_matrix = paper_clusterer.get_dist_matrix(authors_dfs, True)
-  sim_matrix['same_author'] = pair_col
-
-  ### --- Removing Pairs --- ###
-  if flag_remove_doubles:
-    print("Removing Doubles")
-
-    pairs = []
-    for i in range(num_papers):
-      for j in range(num_papers):
-        if (i<j):
-          pairs.append(True)
-        else:
-          pairs.append(False)
-
-    sim_matrix = sim_matrix.iloc[pairs]
-  else:
-    print("Keeping Doubles")
-
-  print("Returning Similarity Matrix.")
-  print("Number of pairs after cleaning: ", len(sim_matrix.index))
-  return sim_matrix
 
 def get_train_test(df,perc_change = 0.8):
   '''
@@ -163,6 +40,7 @@ def get_train_test(df,perc_change = 0.8):
   num_dif = len(df_dif.index)
   num_same = len(df_same.index)
   #Randomize which pairs to take
+  np.random.seed(42)
   idx_rand = list(np.random.choice(range(num_dif),num_same,replace=False))
   df_dif = df_dif.iloc[idx_rand]
 
@@ -233,7 +111,7 @@ def get_dist_matrix(ps,df,model,flag_no_country = False):
   flag_no_country - flag if we want to include country similarity as feature
 
   output:
-  sim_matrix - Similarity Matrix
+  dist_matrix - Similarity Matrix
   '''
   df_sim = get_similarity_matrix(ps,df,False)
   X_feat = df_sim.iloc[:,:-1]
@@ -242,31 +120,10 @@ def get_dist_matrix(ps,df,model,flag_no_country = False):
   X_feat_weights = apply_weights(X_feat,model)
   num_paper = int(np.sqrt(len(X_feat_weights)))
   #Need a square matrix for DBScan
-  sim_matrix = np.array(X_feat_weights).reshape(num_paper,-1)
-  return sim_matrix
+  dist_matrix = np.array(X_feat_weights).reshape(num_paper,-1)
+  return dist_matrix
 
 
 if __name__ == "__main__":
-  CWD = 'c:\\Users\\shaul\\Documents\\GitHub\\academix-ydata-project\\code'
-  if os.getcwd() != CWD:
-      os.chdir("./code/")
-
-  if os.path.exists(PATH + FILE):
-      print("READING FROM LOCAL")
-      df = pd.read_json(PATH+ FILE)
-      ps = PaperSource()
-  else:
-      print("PULLING FROM S3")
-      ps = load_dataset("enriched_labeled")
-      df = ps.get_dataset()
-
-  df.drop(columns="last_author_country",inplace=True)
-  df.rename(columns={'ORG_STATE':'last_author_country'},inplace=True)
-
-  #Get unique authors
-  df = top_N_indie_authors(df,12)
-  df = get_similarity_matrix(ps,df)
-  X_train, y_train, X_test, y_test = get_train_test(df,0.8)
-  score, y_hat,_ = log_model(X_train,y_train,X_test,y_test)
-  print(score)
+  pass
   
