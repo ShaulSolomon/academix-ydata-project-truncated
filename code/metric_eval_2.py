@@ -6,13 +6,13 @@ from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
 from collections import defaultdict
 
-def assign_labels_to_clusters(df_core, num_clusters):
+def assign_labels_to_clusters(df_core: pd.DataFrame, num_clusters: list) -> pd.DataFrame:
   '''
   Based off algorithm in 2_metric_classification, use greedy algorithm to assign a PI_ID to a cluster.
 
   input:
   df_core - dataframe of doc pairs with dbscan approximation
-  num_clusters - the number of clusters the dbscan assumed.
+  num_clusters(list) - the number of clusters the dbscan assumed.
 
   output:
   df_core - return dataframe with the cluster_assigned column, which cluster the paper should be assigned to. 

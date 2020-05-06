@@ -7,6 +7,7 @@ from scipy.sparse import coo_matrix, csr_matrix
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.cluster import DBSCAN
 import seaborn as sns
+from tqdm import tqdm
 
 from yuval_module.paper_source import PaperSource
 
@@ -208,7 +209,7 @@ class PaperClusterer:
     def get_forename_similarities(self, name_list):
         limit=len(name_list)
         res=np.zeros((limit, limit))
-        for i in range(0, limit):
+        for i in tqdm(range(0, limit)):
             for j in range(0, limit):
                 res[i,j]=self.forename_delta(name_list[i], name_list[j])
         return res
@@ -266,20 +267,20 @@ class PaperClusterer:
         return clustering.labels_
 
     def build_distance_matrix(self, df, just_sim_matrix_flag = False):
-        print("Comparing Authors")
+        print("Comparing Authors\n")
         author_sim=self.get_author_similarity(df)
-        print("Comparing Mesh")
+        print("Comparing Mesh\n")
         mesh_sim=self.get_mesh_similarity(df)
         # print("forenames:")
         # print(df["last_author.forename"])
-        print("Comparing Forenames")
+        print("Comparing Forenames\n")
         forename_sim=self.forename_similarity(df)
-        print("Comparing Institutions")
+        print("Comparing Institutions\n")
         inst_sim=self.inst_similarity(df)
-        print("Comparing Emails")
+        print("Comparing Emails\n")
         email_sim=self.email_similarity(df)
         #print(df[["pmid","last_author_email","email_clean"]])
-        print("Comparing Countries")
+        print("Comparing Countries\n")
         country_sim=self.country_similarity(df) 
 
         # import seaborn  as sns
@@ -337,8 +338,8 @@ class PaperClusterer:
                       "mesh":mesh_sim,
                       "inst":inst_sim,
                       "email":email_sim,
-                      "country":country_sim}
-                      #,"forename":forename_sim}
+                      "country":country_sim,
+                      "forename":forename_sim}
         #print("sim matrices shapes for author and mesh:")
         num_items=len(df)*len(df)
         feat_df=pd.DataFrame({"author":author_sim.reshape(num_items,),
@@ -439,7 +440,7 @@ class PaperClusterer:
         limit=len(df)
         meshes=df["mesh_as_tfidf"].tolist()
         res=np.zeros((limit, limit))
-        for i in range(0, limit):
+        for i in tqdm(range(0, limit)):
             for j in range(0, limit):
                 if i==j:
                     res[i,j]=1
