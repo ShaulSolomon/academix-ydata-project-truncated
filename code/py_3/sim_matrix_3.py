@@ -5,6 +5,8 @@ from boto.s3.key import Key
 from boto import s3
 import boto3
 
+import numpy as np
+
 from yuval_module.paper_clusterer import PaperClusterer
 from yuval_module.paper_source import PaperSource
 
@@ -22,65 +24,90 @@ def get_res_papers(ps,author_name):
     df=ps.get_dataset()
     return df[df['last_author_name']==author_name]
 
-def top_authors(df, use_case):
-  '''
-  Finds for us the most published authors to use them in our dataset.
+def base_authors(df, use_case):
+    '''
+    Finds for us the most published authors to use as training examples for LR model
 
-  input:
-  df - dataframe with all the data stored
-  use_case - possible use-cases:
-    0) Base case (top 15 authors) // use_case = "base"
-    1) 3 distinct authors (each having ~30 papers) // use_case = "3_dist_auth" 
-    2) 2 distinct authors (one with ~30 papers, the other with ~10 papers) // use_case = "2_dist_dif_auth"
-    3) 3 authors that share the same name (together has 50 papers) // use_case =  "1_auth"
-  '''
-  unique_authors = df.groupby('last_author_name')[["PI_IDS"]].nunique()
-  unique_authors = unique_authors[unique_authors["PI_IDS"] == 1].index
-  indie_authors = df[df['last_author_name'].isin(unique_authors)].groupby('last_author_name')['pmid'].nunique().sort_values(ascending=False)
-  if use_case == "base":
-    indie_author = list(indie_authors.index)[:20]
-  elif use_case == "3_dist_auth":
-    indie_author = list(indie_authors.index)[15:18]
-  elif use_case == "2_dist_dif_auth":
-    indie_author = list(indie_authors.index)
-    indie_author = [indie_author[15]] + [indie_author[1050]]
-  elif use_case == "1_auth":
+    input:
+    df - dataframe with all the data stored
+    use_case - possible use-cases:
+    1) Base case (top 20 authors) // use_case = "base"
+
+    TODO: Add possible base for disambiguated authors AND/OR one combined base
+    '''
     unique_authors = df.groupby('last_author_name')[["PI_IDS"]].nunique()
-    unique_authors = unique_authors[unique_authors["PI_IDS"] == 3].index
+    unique_authors = unique_authors[unique_authors["PI_IDS"] == 1].index
     indie_authors = df[df['last_author_name'].isin(unique_authors)].groupby('last_author_name')['pmid'].nunique().sort_values(ascending=False)
-    indie_author = [list(indie_authors.index)[0]]
-  return df[df["last_author_name"].isin(indie_author)]
+    if use_case == "base":
+        indie_author = list(indie_authors.index)[:20]
+        return df[df["last_author_name"].isin(indie_author)]
+    else:
+        print("USE CASE GIVEN NOT FAMILIAR - PLEASE CHECK DOCSTRING")
 
 def get_use_case(df, use_case):
     '''
     In order to get accurate results, we need to run many scenarios for each use case. 
-    This function just gets a list of all candidates for the use-cases
+    This function just gets a list of all candidates for the use-cases.
+
+    Parameters:
+        df - Dataframe of publications
+        use_case = possible use_cases
+                    3_ua_same - 3 Unique Authors with similar num papers
+                    2_ua_dif - 2 Unique Authors with dif. num papers
+                    2_da_same - 2 Disambiguated Authors with same num papers
+                    2_da_dif -  2 Disambiguated Authors with dif num papers
+
+    Return:
+        List of all possible author names that fit the use_case
     '''
     if use_case == "3_ua_same":
-        #Unique author where each is ~ 30 papers...
+        #Three Unique author where each is ~ 30 papers...
+        #Get Unique authors
         unique_authors = df.groupby('last_author_name')[["PI_IDS"]].nunique()
         unique_authors = unique_authors[unique_authors["PI_IDS"] == 1].index
+        #Take only whose papers are between 27 and 33 papers
         bool_authors_30 = df[df['last_author_name'].isin(unique_authors)].groupby('last_author_name')['pmid'].size().between(27,33)
         possible_authors_30 = list(unique_authors[bool_authors_30])
         return possible_authors_30
     elif use_case == "2_ua_dif":
-         #Unique author where each is ~ 30 papers or ~10 papers...
+         #Two Unique authors where one is ~ 30 papers and the other is ~10 papers
+         #Get Unique authors
         unique_authors = df.groupby('last_author_name')[["PI_IDS"]].nunique()
         unique_authors = unique_authors[unique_authors["PI_IDS"] == 1].index
+        #Take only whose papers are between 27-33 and 8-12
         bool_authors_30 = df[df['last_author_name'].isin(unique_authors)].groupby('last_author_name')['pmid'].size().between(27,33)
         bool_authors_10 = df[df['last_author_name'].isin(unique_authors)].groupby('last_author_name')['pmid'].size().between(8,12)
         possible_authors_30 = list(unique_authors[bool_authors_30])
         possible_authors_10 = list(unique_authors[bool_authors_10])   
-        return zip(possible_authors_30,possible_authors_10)
-    else use_case == '2_da_same':
-    unique_authors = df.groupby('last_author_name')[["PI_IDS"]].nunique()
-    unique_authors = unique_authors[unique_authors["PI_IDS"] == 2].index
-    indie_authors = df[df['last_author_name'].isin(unique_authors)].groupby(['last_author_name','PI_IDS'])[['pmid']].nunique().reset_index(1)
-    indie_authors = indie_authors.join(indie_authors, lsuffix="_l", rsuffix='_r').reset_index()
-    indie_authors = indie_authors[indie_authors["PI_IDS_l"] != indie_authors["PI_IDS_r"]].drop_duplicates("last_author_name",keep="first").set_index('last_author_name')
-    possible_authors_same = indie_authors[(indie_authors["pmid_l"] > 5) & 
-                                        (indie_authors["pmid_r"] > 5) &
+        return (possible_authors_30,possible_authors_10)
+    elif use_case == '2_da_same':
+        #Two disambiguated authors where both have more than 5 papers and have a close number of papers (3 or less)
+        #Get disambiguated authors
+        unique_authors = df.groupby('last_author_name')[["PI_IDS"]].nunique()
+        unique_authors = unique_authors[unique_authors["PI_IDS"] == 2].index
+        #Combine rows based off last_author_name 
+        indie_authors = df[df['last_author_name'].isin(unique_authors)].groupby(['last_author_name','PI_IDS'])[['pmid']].nunique().reset_index(1)
+        indie_authors = indie_authors.join(indie_authors, lsuffix="_l", rsuffix='_r').reset_index()
+        indie_authors = indie_authors[indie_authors["PI_IDS_l"] != indie_authors["PI_IDS_r"]].drop_duplicates("last_author_name",keep="first").set_index('last_author_name')
+        #Each need to have more than 5 papers and need to have an equal number of papers
+        possible_authors_same = indie_authors[(indie_authors["pmid_l"] > 5) & 
+                                            (indie_authors["pmid_r"] > 5) &
                                         (np.abs(indie_authors["pmid_l"] - indie_authors["pmid_r"]) < 4)]
+        return list(possible_authors_same.index)
+    elif use_case == '2_da_dif':
+        #Two disambiguated authors with at both at least 3 papers, but dif. number of clusters (dif > 5)
+        #Get disambiguate authors
+        unique_authors = df.groupby('last_author_name')[["PI_IDS"]].nunique()
+        unique_authors = unique_authors[unique_authors["PI_IDS"] == 2].index
+        #Combine rows based off last_author_name
+        indie_authors = df[df['last_author_name'].isin(unique_authors)].groupby(['last_author_name','PI_IDS'])[['pmid']].nunique().reset_index(1)
+        indie_authors = indie_authors.join(indie_authors, lsuffix="_l", rsuffix='_r').reset_index()
+        indie_authors = indie_authors[indie_authors["PI_IDS_l"] != indie_authors["PI_IDS_r"]].drop_duplicates("last_author_name",keep="first").set_index('last_author_name')
+        #Each need at least 4 papers and dif. has to be greater than 6
+        possible_authors_dif = indie_authors[(indie_authors["pmid_l"] > 3) & 
+                                            (indie_authors["pmid_r"] > 3) &
+                                            (np.abs(indie_authors["pmid_l"] - indie_authors["pmid_r"]) > 5)]
+        return list(possible_authors_dif.index)
     else:
         print("USE CASE NOT FOUND -  PLEASE LOOK AT DOCUMENTATION")
         return None

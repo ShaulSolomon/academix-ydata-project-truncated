@@ -16,8 +16,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns; sns.set()
 
-from yuval_module.paper_clusterer import PaperClusterer
-from yuval_module.paper_source import PaperSource
 
 from sklearn.linear_model import LogisticRegression as LogR
 
@@ -113,7 +111,7 @@ def get_dist_matrix(ps,df,model,flag_no_country = False):
   output:
   dist_matrix - Similarity Matrix
   '''
-  df_sim = get_similarity_matrix(ps,df,False)
+  df_sim = sim_matrix_3.get_similarity_matrix(ps,df,False)
   X_feat = df_sim.iloc[:,:-1]
   if flag_no_country:
     X_feat.drop(columns="country",inplace=True)
