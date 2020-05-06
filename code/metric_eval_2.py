@@ -99,12 +99,21 @@ def get_metrics(df):
   #print(df_eval)
   return num_clusters_db, num_authors, precision, recall, df_eval
 
-def get_metrics_many(df):
+def get_metrics_many(group_cases):
+  '''
+  Iterate through each of the cases and extract their individual metrics and get a total scoring
+
+  Parameters:
+    group_cases - list of all the dataframes of each DB case
+  
+  Return
+    F1  - F1Score
+  '''
   total_recall = np.array([])
   total_precision = np.array([])
   total_df_eval = pd.DataFrame()
 
-  for i,group in enumerate(df):
+  for i,group in enumerate(group_cases):
     df_core = assign_labels_to_clusters(group, group['cluster_pred'].unique())
     num_clusters_db, num_authors, precision, recall, df_eval = get_metrics(df_core)
     print("Situation {}".format(i))
@@ -119,11 +128,15 @@ def get_metrics_many(df):
     total_df_eval = (total_df_eval.reindex_like(df_eval).fillna(0) + df_eval.fillna(0).fillna(0))
 
   
+  # //TODO: Do we need a weighted mean or because the cases are similar enough, we can give them equal worth? 
+
   total_precision = np.mean(total_precision)
   total_recall = np.mean(total_recall)
   print("\n\nTotal Precision: {}\tTotal Recall: {}".format(total_precision,total_recall))
   total_df_eval = total_df_eval.T / total_df_eval.T.sum()
   print(total_df_eval.T)
+  F1 = 2 * (total_precision * total_recall) / (total_precision + total_recall)
+  return F1
 
 
 if __name__ == "__main__":

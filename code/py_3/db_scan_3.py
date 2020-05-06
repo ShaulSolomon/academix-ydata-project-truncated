@@ -40,12 +40,12 @@ def db_multiple(ps, df, use_case, num_cases, model,epsilon):
     y_hat_comb = []
 
     for i,comb in enumerate(all_comb):
-        print("Processing combination number {} from {}".format(i,num_cases))
+        print("Processing combination number {} from {}".format(i+1,num_cases))
         df_auth = df[df['last_author_name'].isin(comb)]
         #Calculate the distance matrix
         dist_mat = lr_model_3.get_dist_matrix(ps,df_auth,model,flag_no_country = False)
         #input it through DBS
-        y_hat = DBS(eps=0.47, min_samples=1, metric="precomputed").fit(dist_mat)
+        y_hat = DBS(eps=epsilon, min_samples=1, metric="precomputed").fit(dist_mat)
         df_clus = df_auth[["pmid","PI_IDS"]]
         df_clus['cluster_pred'] = y_hat.labels_
         y_hat_comb.append(df_clus)
