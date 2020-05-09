@@ -6,13 +6,14 @@ from sklearn.cluster import DBSCAN as DBS
 import numpy as np
 
 
-def db_multiple(ps, df, use_case, num_cases, model,epsilon):
+def db_multiple(ps, df, scaler, use_case, num_cases, model,epsilon):
     '''
     Gathers several situations for each use case and calculates their y_hats
 
     Parameters:
         ps - PaperSource
         df - dataframe with all the details
+        scaler - scaler to normalize our data
         use_case - the use_case we want to explore
         num_cases - the number of dif. cases we try (of num cases - 66 was the smallest)
         model - model learned from the LR model
@@ -43,12 +44,13 @@ def db_multiple(ps, df, use_case, num_cases, model,epsilon):
         print("Processing combination number {} from {}".format(i+1,num_cases))
         df_auth = df[df['last_author_name'].isin(comb)]
         #Calculate the distance matrix
-        dist_mat = lr_model_3.get_dist_matrix(ps,df_auth,model,flag_no_country = False)
+        dist_mat = lr_model_3.get_dist_matrix(ps,df_auth,scaler, model,flag_no_country = False)
         #input it through DBS
         y_hat = DBS(eps=epsilon, min_samples=1, metric="precomputed").fit(dist_mat)
         df_clus = df_auth[["pmid","PI_IDS"]]
         df_clus['cluster_pred'] = y_hat.labels_
         y_hat_comb.append(df_clus)
-    
+        print("\n") 
+
     return y_hat_comb
 

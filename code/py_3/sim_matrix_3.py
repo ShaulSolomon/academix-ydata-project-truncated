@@ -6,6 +6,9 @@ from boto import s3
 import boto3
 
 import numpy as np
+import pandas as pd
+
+from sklearn.preprocessing import StandardScaler
 
 from yuval_module.paper_clusterer import PaperClusterer
 from yuval_module.paper_source import PaperSource
@@ -31,16 +34,34 @@ def base_authors(df, use_case):
     input:
     df - dataframe with all the data stored
     use_case - possible use-cases:
-    1) Base case (top 20 authors) // use_case = "base"
+      1) UA case (top 20 UA authors) // use_case = "base_ua"
+      2) DA case (3 DA's where each publisher has at least 4 papers)// use_case = "base_da
 
     TODO: Add possible base for disambiguated authors AND/OR one combined base
     '''
-    unique_authors = df.groupby('last_author_name')[["PI_IDS"]].nunique()
-    unique_authors = unique_authors[unique_authors["PI_IDS"] == 1].index
-    indie_authors = df[df['last_author_name'].isin(unique_authors)].groupby('last_author_name')['pmid'].nunique().sort_values(ascending=False)
-    if use_case == "base":
-        indie_author = list(indie_authors.index)[:20]
-        return df[df["last_author_name"].isin(indie_author)]
+    if use_case == "base_ua":
+      unique_authors = df.groupby('last_author_name')[["PI_IDS"]].nunique()
+      unique_authors = unique_authors[unique_authors["PI_IDS"] == 1].index
+      indie_authors = df[df['last_author_name'].isin(unique_authors)].groupby('last_author_name')['pmid'].nunique().sort_values(ascending=False)
+      indie_author = list(indie_authors.index)[:20]
+      return df[df["last_author_name"].isin(indie_author)]
+
+    elif use_case == "base_da":
+      unique_authors = df.groupby('last_author_name')[["PI_IDS"]].nunique()
+      unique_authors = unique_authors[unique_authors["PI_IDS"] == 3].index
+      indie_authors = df[df['last_author_name'].isin(unique_authors)].groupby(['last_author_name','PI_IDS'])[['pmid']]                                                                  .nunique().reset_index(1)
+
+      indie_authors2 = indie_authors.join(indie_authors, lsuffix="_l", rsuffix='_r')
+      indie_authors = indie_authors2.join(indie_authors, lsuffix="_l", rsuffix='_r').reset_index()
+
+      indie_authors = indie_authors[(indie_authors["PI_IDS_l"] != indie_authors["PI_IDS_r"]) & \
+                                    (indie_authors["PI_IDS_l"] != indie_authors["PI_IDS"]) & \
+                                    (indie_authors["PI_IDS_r"] != indie_authors["PI_IDS"])].drop_duplicates("last_author_name",keep="first")                                                                                        .set_index('last_author_name')
+
+      possible_authors_same = list(indie_authors[(indie_authors["pmid_l"] > 3) & \
+                                            (indie_authors["pmid_r"] > 3) & \
+                                            (indie_authors["pmid"] > 3)].index)
+      return df[df["last_author_name"].isin(possible_authors_same)]
     else:
         print("USE CASE GIVEN NOT FAMILIAR - PLEASE CHECK DOCSTRING")
 
@@ -112,25 +133,27 @@ def get_use_case(df, use_case):
         print("USE CASE NOT FOUND -  PLEASE LOOK AT DOCUMENTATION")
         return None
 
-def get_similarity_matrix(ps,authors_dfs,flag_remove_doubles = True):
+def get_similarity_matrix(ps,authors_dfs,scaler = None, flag_base = True):
   '''
   Using Yuval's code, we take the dataframe, and for:
   `Authors, Mesh, Forenames, Institutions, Emails, Countries`
   We compute similarities and return a similarity matrix.
 
-  If flag_remove_doubles = True, we are trying to train the LR model, and therefore want to make sure we don't
-  have any duplicates.
+  If flag_base = True, we are trying to train the LR model, and therefore want to make sure we don't
+  have any duplicates. We are also creating a Scaler instance to be used for future scaling.
 
-  If flag_remove_doubles = False, we are trying to get a distance matrix for the DBScan and need the 
-  duplicates, because the algorithm takes a square matrix.
+  If flag_base = False, we are trying to get a distance matrix for the DBScan and need the 
+  duplicates, because the algorithm takes a square matrix. We are also normalizing with Scaler instance.
 
   Input: 
-  ps - PaperSource instance
-  authors_dfs - Dataframe of all features for given authors
-  flag_remove_double - flag whether to delete duplicates
+    ps - PaperSource instance
+    authors_dfs - Dataframe of all features for given authors
+    flag_remove_double - flag whether to delete duplicates
+    scaler - if not the base_case, the Scaler to normalize the values.
 
   Output:
-  sim_matrix - Matrix based off the similarity of features for given pairs of documents.
+    sim_matrix - Matrix based off the similarity of features for given pairs of documents.
+    scaler - instance of Scaler
   '''
 
   ### --- Getting general similarity matrix --- ###
@@ -138,10 +161,14 @@ def get_similarity_matrix(ps,authors_dfs,flag_remove_doubles = True):
   num_papers = authors_dfs.shape[0]
   print("Total number of papers: ", num_papers)
 
-  print("Building Same Author Column")
+  print("Building Same Author/Name Columns")
   #get similarity column
   author_list = list(authors_dfs['PI_IDS'])
   pair_col = []
+
+  #get column for when they have the same name.
+  same_author_list = list(authors_dfs['last_author_name'])
+  same_name_col = []
 
   for i in range(num_papers):
     for j in range(num_papers):
@@ -149,6 +176,15 @@ def get_similarity_matrix(ps,authors_dfs,flag_remove_doubles = True):
         pair_col.append(0)
       else:
         pair_col.append(1)
+
+      #If they have the same name = 0, otherwise 1
+      if same_author_list[i] == same_author_list[j]:
+        same_name_col.append(0)
+      else:
+        same_name_col.append(1)
+
+  
+
 
   print("Number of paper combinations (pre-cleaning) is: ", len(pair_col))
   
@@ -158,9 +194,12 @@ def get_similarity_matrix(ps,authors_dfs,flag_remove_doubles = True):
   #get dist matrix
   sim_matrix = paper_clusterer.get_dist_matrix(authors_dfs, True)
   sim_matrix['same_author'] = pair_col
+  sim_matrix['same_name'] = same_name_col
 
   ### --- Removing Pairs --- ###
-  if flag_remove_doubles:
+
+  #If we are learning our LR weights
+  if flag_base:
     print("Removing Doubles")
 
     pairs = []
@@ -172,9 +211,15 @@ def get_similarity_matrix(ps,authors_dfs,flag_remove_doubles = True):
           pairs.append(False)
 
     sim_matrix = sim_matrix.iloc[pairs]
+    #Normalize the data
+    scaler =  StandardScaler()
+    sim_matrix.iloc[:,:-2] = scaler.fit_transform(sim_matrix.iloc[:,:-2])
   else:
+    #Normalize the data
+    sim_matrix.iloc[:,:-2] = scaler.transform(sim_matrix.iloc[:,:-2])
     print("Keeping Doubles")
 
   print("Returning Similarity Matrix.")
   print("Number of pairs after cleaning: ", len(sim_matrix.index))
-  return sim_matrix
+  return sim_matrix, scaler
+

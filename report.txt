@@ -1,0 +1,87 @@
+Core_data: UA top 20. Normalized: No. Epsilon: .47
+
+The score is:  0.6170313986679353
+The features are:
+author, mesh, inst, email, country, forename
+The weights are:  [-1.54 -0.71  0.36  0.06 -1.08 -1.41]
+
+
+Use_case "3_UA_SAME":
+
+Total Precision: 0.6463519117290772	Total Recall: 0.6950929172794258
+                 2 cluster(s)
+mis_integration           1.0
+mis_separation            1.0
+
+-------------------------------------------------
+
+Core_data: UA top 20. Normalized: Yes. Epsilon: .47 (from SearchGrid)
+
+The score is:  0.6170313986679353
+The features are:
+author, mesh, inst, email, country, forename
+The weights are:  [-0.05 -0.03  0.13  0.03 -0.36 -0.34]
+
+Use_case "3_UA_SAME":
+
+Total Precision: 0.6463519117290772	Total Recall: 0.6950929172794258
+                 2 cluster(s)
+mis_integration           1.0
+mis_separation            1.0
+0.6698369194131806
+
+Thoughts:
+
+Same value as without normalization. Doesn't look like it does a difference.
+
+-------------------------------------------------
+
+Core_data: DA. Normalized: Yes. Epsilon: .47 (from SearchGrid from UA CASE) Dif_Author Choice: Random (8%).
+
+The score is:  0.5966386554621849
+The features are:
+author, mesh, inst, email, country, forename
+The weights are:  [-0.11  0.14  0.12  0.   -0.53 -0.28]
+
+Use_case = "2_da_same":
+
+Total Precision: 0.2641815841179928	Total Recall: 0.3941544915423887
+                 2 cluster(s)
+mis_integration           1.0
+mis_separation            1.0
+0.316337997605367
+
+Use_case = "2_da_dif":
+
+Total Precision: 0.38518600205664916	Total Recall: 0.4848042417512079
+                 2 cluster(s)  3 cluster(s)  4 cluster(s)
+mis_integration      0.894737      0.052632      0.052632
+mis_separation       0.882353      0.058824      0.058824
+0.4292917282449335
+
+
+
+------------------------------------------------------------------------------------
+
+Core_data: DA. Normalized: Yes. (Epsilon: .47 (from SearchGrid from UA CASE)) Dif_Author Choice: 50%.
+
+The score is:  0.5714285714285714
+The features are:
+author, mesh, inst, email, country, forename
+The weights are:  [-0.06  0.07  0.03 -0.05 -0.5  -0.23]
+
+Use_case = "2_da_same":
+
+Total Precision: 0.2641815841179928	Total Recall: 0.3941544915423887
+                 2 cluster(s)
+mis_integration           1.0
+mis_separation            1.0
+0.316337997605367
+
+Use_case = "2_da_dif:
+
+Total Precision: 0.3880996510237671	Total Recall: 0.4822443539531714
+                 2 cluster(s)  3 cluster(s)  4 cluster(s)
+mis_integration      0.842105      0.105263      0.052632
+mis_separation       0.823529      0.117647      0.058824
+0.4300802083019277
