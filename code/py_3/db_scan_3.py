@@ -18,6 +18,9 @@ def db_multiple(ps, df, scaler, use_case, num_cases, model,epsilon):
         num_cases - the number of dif. cases we try (of num cases - 66 was the smallest)
         model - model learned from the LR model
         epsilon - needs to be learned but the epsilon for the DB
+
+    Return:
+        y_hat_comb - list of dataframe of pmid, pi_id, clus_pred for every use_case
     '''
     #Get combinations of authors from the given use_case
     authors = sim_matrix_3.get_use_case(df,use_case)
