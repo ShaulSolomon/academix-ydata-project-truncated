@@ -12,7 +12,15 @@ from tqdm import tqdm
 from yuval_module.paper_source import PaperSource
 
 class PaperClusterer:
-    def __init__(self, eps=1.37):
+    def __init__(self, 
+                eps=1.37,
+                gammas= {
+                        "author":0.5,
+                        "mesh":0.3,
+                        "inst":0.1,
+                        "email":0.1,
+                        "country":0.0}
+                ):
         
         self.paper_source = PaperSource()
         self.cur_researcher_id=self.paper_source.cur_researcher_id #first free researcher id
@@ -21,6 +29,7 @@ class PaperClusterer:
         self.cur_dict=corpora.Dictionary.load("./yuval_module/mesh_dict.mm")
         self.tfidf_model=models.TfidfModel.load("./yuval_module/tfidf_corpus_papers4.bin")
         self.num_dict_terms=len(self.cur_dict.keys())
+        self.gammas = gammas 
 
     def empty_last_author_response(self, row):
         res_row={"pmid":row.pmid,
@@ -450,15 +459,11 @@ class PaperClusterer:
         return res
 
     def combine_similarities(self, similarity_map):
-        gammas={"author":0.5,
-                "mesh":0.3,
-                "inst":0.1,
-                "email":0.1,
-                "country":0.0}
+       
         
         key_set=set(similarity_map.keys())
         key_set.remove("forename")
-        weighted_sims=[gammas[k]*similarity_map[k] for k in key_set]
+        weighted_sims=[self.gammas[k]*similarity_map[k] for k in key_set]
         aa=[w.shape for w in weighted_sims]
         #print(aa)
         avg_sim=np.sum(w for w in weighted_sims)
