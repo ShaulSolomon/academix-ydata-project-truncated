@@ -77,7 +77,7 @@ mis_integration           1.0
 mis_separation            1.0
 0.316337997605367
 
-Use_case = "2_da_dif:
+Use_case = "2_da_dif":
 
 Total Precision: 0.3880996510237671	Total Recall: 0.4822443539531714
                  2 cluster(s)  3 cluster(s)  4 cluster(s)
@@ -91,8 +91,25 @@ mis_separation       0.823529      0.117647      0.058824
 -------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------
 
-*USING SYNTHETIC DATA - changing forename and email similarity*
+Core_data: DA. Normalized: No. (Epsilon: .47 (from SearchGrid from UA CASE)) Same_Author_Name Pairs: ALL.
 
-Core_data: UA top  (SYNTHETIC). Normalized: No.
+The score is:  0.5534188034188035
+The features are:
+author, mesh, inst, email, country, forename
+The weights are:  [-0.66 -0.17 -0.01  0.04 -0.93 -0.01]
 
+Use_case = "2_da_same":
 
+Total Precision: 0.3041961182190747	Total Recall: 0.4058405492709858
+                 2 cluster(s)
+mis_integration           1.0
+mis_separation            1.0
+0.3477429416160658
+
+Use_case = "2_da_dif":
+
+Total Precision: 0.46442926067453877	Total Recall: 0.4760500573268133
+                 2 cluster(s)  3 cluster(s)  4 cluster(s)
+mis_integration      0.272727      0.666667      0.060606
+mis_separation       0.272727      0.666667      0.060606
+0.47016786427204743

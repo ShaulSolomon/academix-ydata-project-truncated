@@ -10,6 +10,7 @@ import pandas as pd
 
 from sklearn.preprocessing import StandardScaler
 
+sys.path.append('code')
 from yuval_module.paper_clusterer import PaperClusterer
 from yuval_module.paper_source import PaperSource
 
@@ -159,7 +160,7 @@ def get_use_case(df, use_case):
         print("USE CASE NOT FOUND -  PLEASE LOOK AT DOCUMENTATION")
         return None
 
-def get_similarity_matrix(ps,authors_dfs,scaler = None, flag_base = True):
+def get_similarity_matrix(ps,dfs_authors,scaler=None,flag_base= True):
   '''
   Using Yuval's code, we take the dataframe, and for:
   `Authors, Mesh, Forenames, Institutions, Emails, Countries`
@@ -173,77 +174,68 @@ def get_similarity_matrix(ps,authors_dfs,scaler = None, flag_base = True):
 
   Input: 
     ps - PaperSource instance
-    authors_dfs - Dataframe of all features for given authors
-    flag_remove_double - flag whether to delete duplicates
+    dfs_authors - Dataframe of all features for given authors
+    flag_base - if base case - remove doubles and create scaler
     scaler - if not the base_case, the Scaler to normalize the values.
 
   Output:
     sim_matrix - Matrix based off the similarity of features for given pairs of documents.
     scaler - instance of Scaler
   '''
-
-  ### --- Getting general similarity matrix --- ###
-
-  num_papers = authors_dfs.shape[0]
-  print("Total number of papers: ", num_papers)
-
-  print("Building Same Author/Name Columns")
-  #get similarity column
-  author_list = list(authors_dfs['PI_IDS'])
-  pair_col = []
-
-  #get column for when they have the same name.
-  same_author_list = list(authors_dfs['last_author_name'])
-  same_name_col = []
-
-  for i in range(num_papers):
-    for j in range(num_papers):
-      if author_list[i] == author_list[j]:
-        pair_col.append(0)
-      else:
-        pair_col.append(1)
-
-      #If they have the same name = 0, otherwise 1
-      if same_author_list[i] == same_author_list[j]:
-        same_name_col.append(0)
-      else:
-        same_name_col.append(1)
-
-  print("Number of paper combinations (pre-cleaning) is: ", len(pair_col))
-  
   print("Getting Similarities")
-  
   paper_clusterer=PaperClusterer(eps=1.27)
-  #get dist matrix
-  sim_matrix = paper_clusterer.get_dist_matrix(authors_dfs, True)
 
-  sim_matrix['same_author'] = pair_col
-  sim_matrix['same_name'] = same_name_col
+  same_author_list = list(dfs_authors['last_author_name'].unique())
+  total_df = pd.DataFrame()
 
-  ### --- Removing Pairs --- ###
+  #get dist_matrix for every possible pair...
+  for i, same_author in enumerate(same_author_list):
+    print("Author {} within {}".format(i+1,len(same_author_list)))
+    df_temp = dfs_authors[dfs_authors['last_author_name'] == same_author]
 
-  #If we are learning our LR weights
-  if flag_base:
-    print("Removing Doubles")
+    num_papers = df_temp.shape[0]
+    print("Total number of papers: ", num_papers)
 
-    pairs = []
-    for i in range(num_papers):
-      for j in range(num_papers):
-        if (i<j):
-          pairs.append(True)
+
+    #add to pairs if they are the same author or not
+
+    pid_list = list(df_temp['PI_IDS'])
+    pair_col = []
+
+    for j in range(num_papers):
+      for k in range(num_papers):
+        if pid_list[j] == pid_list[k]:
+          pair_col.append(0)
         else:
-          pairs.append(False)
+          pair_col.append(1)
 
-    sim_matrix = sim_matrix.iloc[pairs]
+    sim_matrix = paper_clusterer.get_dist_matrix(df_temp, True)
+    sim_matrix['same_author'] = pair_col    
+
+    ### --- Removing Pairs --- ###
+
+    #If we are learning our LR weights
+    if flag_base:
+      print("Removing Doubles")
+
+      pairs = []
+      for i in range(num_papers):
+        for j in range(num_papers):
+          if (i<j):
+            pairs.append(True)
+          else:
+            pairs.append(False)
+      sim_matrix = sim_matrix.iloc[pairs]
+      total_df = pd.concat([total_df,sim_matrix])
+
+  if flag_base:
     #Normalize the data
     scaler =  StandardScaler()
-    sim_matrix.iloc[:,:-2] = scaler.fit_transform(sim_matrix.iloc[:,:-2])
+    total_df.iloc[:,:-1] = scaler.fit_transform(total_df.iloc[:,:-1])
   else:
     # Normalize the data
-    sim_matrix.iloc[:,:-2] = scaler.transform(sim_matrix.iloc[:,:-2])
-    print("Keeping Doubles")
+    total_df.iloc[:,:-1] = scaler.transform(total_df.iloc[:,:-1])
 
   print("Returning Similarity Matrix.")
-  print("Number of pairs after cleaning: ", len(sim_matrix.index))
-  return sim_matrix, scaler
-
+  print("Number of pairs after cleaning: ", len(total_df.index))
+  return total_df, scaler

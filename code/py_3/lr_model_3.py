@@ -7,7 +7,10 @@ from collections import Counter
 from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
 from collections import defaultdict
-import py_3.sim_matrix_3 as sim_matrix_3
+
+import os, sys
+sys.path.append(r'code\py_3')
+import sim_matrix_3 as sim_matrix_3
 
 import pandas as pd
 import numpy as np
@@ -51,14 +54,17 @@ def get_train_test(df,perc_change = 0.8, flag_da_case = False):
   if num_same < num_dif:
     idx_rand = list(np.random.choice(range(num_dif),num_same,replace=False))
     df_dif = df_dif.iloc[idx_rand]
+  else:
+    idx_rand = list(np.random.choice(range(num_same),num_dif,replace=False))
+    df_same = df_same.iloc[idx_rand]
 
   perc_train = int(len(df_dif.index)*perc_change)
 
-  print("There are {} pairs being used, half of them with the same author, {} of them as train data".format(num_same*2,perc_train*2))
+  print("There are {} pairs being used, half of them with the same author, {} of them as train data".format(min(num_same,num_dif)*2,perc_train*2))
 
   train_df = pd.concat((df_same[:perc_train],df_dif[:perc_train]))
   test_df = pd.concat((df_same[perc_train:],df_dif[perc_train:]))
-  return train_df.iloc[:,:-2] , train_df.iloc[:,-2], test_df.iloc[:,:-2], test_df.iloc[:,-2]
+  return train_df.iloc[:,:-1] , train_df.iloc[:,-1], test_df.iloc[:,:-1], test_df.iloc[:,-1]
 
 
 def sigmoid(x):
@@ -123,7 +129,7 @@ def get_dist_matrix(ps,df,scaler, model,flag_no_country = False):
   dist_matrix - Similarity Matrix
   '''
   df_sim,_ = sim_matrix_3.get_similarity_matrix(ps,df,scaler,flag_base = False)
-  X_feat = df_sim.iloc[:,:-2]
+  X_feat = df_sim.iloc[:,:-1]
   if flag_no_country:
     X_feat.drop(columns="country",inplace=True)
   X_feat_weights = apply_weights(X_feat,model)
@@ -134,5 +140,6 @@ def get_dist_matrix(ps,df,scaler, model,flag_no_country = False):
 
 
 if __name__ == "__main__":
-  pass
+  path = os.getcwd()
+  print(path)
   
