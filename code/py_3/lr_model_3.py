@@ -7,7 +7,7 @@ from collections import Counter
 from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
 from collections import defaultdict
-import sim_matrix_3
+import py_3.sim_matrix_3 as sim_matrix_3
 
 import pandas as pd
 import numpy as np
@@ -16,33 +16,41 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns; sns.set()
 
-from yuval_module.paper_clusterer import PaperClusterer
-from yuval_module.paper_source import PaperSource
 
 from sklearn.linear_model import LogisticRegression as LogR
 
-def get_train_test(df,perc_change = 0.8):
+def get_train_test(df,perc_change = 0.8, flag_da_case = False):
   '''
   Splits the dataframe into Train and Test data, splitting with `perc_change` %.
   To keep a balance of the data, we take the same # of same author pairs to the # of dif author pairs
   The dif author pairs is random, to protect against overfitting.
 
+  If we are dealing with DA case, we want to make sure that are enough cases with the same name, so that
+  the model learns that name as a similarity feature is important.
+
   Input:
-  df - dataframe with all the data
-  perc_change - percentage of data to be in Train set
+    df - dataframe with all the data
+    perc_change - percentage of data to be in Train set
+    flag_da_case - flag whether or not we are dealing with a DA case
+    da_samename_perc - perc of pairs not with the same author but have the same name
 
   Output:
   X_train, y_train, X_test, y_test
   '''
+
   #Get equal number of same and different for Logistic Regression
   df_same = df[df['same_author'] == 0]
+  num_same = len(df_same.index)
   df_dif = df[df['same_author'] == 1]
   num_dif = len(df_dif.index)
-  num_same = len(df_same.index)
+
+  print("Same author #: {}, dif author #: {}".format(num_same,num_dif))
+
   #Randomize which pairs to take
   np.random.seed(42)
-  idx_rand = list(np.random.choice(range(num_dif),num_same,replace=False))
-  df_dif = df_dif.iloc[idx_rand]
+  if num_same < num_dif:
+    idx_rand = list(np.random.choice(range(num_dif),num_same,replace=False))
+    df_dif = df_dif.iloc[idx_rand]
 
   perc_train = int(len(df_dif.index)*perc_change)
 
@@ -50,7 +58,7 @@ def get_train_test(df,perc_change = 0.8):
 
   train_df = pd.concat((df_same[:perc_train],df_dif[:perc_train]))
   test_df = pd.concat((df_same[perc_train:],df_dif[perc_train:]))
-  return train_df.iloc[:,:-1] , train_df.iloc[:,-1], test_df.iloc[:,:-1], test_df.iloc[:,-1]
+  return train_df.iloc[:,:-2] , train_df.iloc[:,-2], test_df.iloc[:,:-2], test_df.iloc[:,-2]
 
 
 def sigmoid(x):
@@ -100,21 +108,22 @@ def apply_weights(X_test, best_model):
   predict_prob = [sigmoid(np.dot(x_test,weights) + bias[0]) for x_test in X_test.to_numpy()]
   return predict_prob
 
-def get_dist_matrix(ps,df,model,flag_no_country = False):
+def get_dist_matrix(ps,df,scaler, model,flag_no_country = False):
   '''
   Get the estimated LogR value for each doc pair.
 
   input:
   ps - Papersource instance
   df - dataframe
+  scaler - scaler to normalize data
   model - LogR model
   flag_no_country - flag if we want to include country similarity as feature
 
   output:
   dist_matrix - Similarity Matrix
   '''
-  df_sim = get_similarity_matrix(ps,df,False)
-  X_feat = df_sim.iloc[:,:-1]
+  df_sim,_ = sim_matrix_3.get_similarity_matrix(ps,df,scaler,flag_base = False)
+  X_feat = df_sim.iloc[:,:-2]
   if flag_no_country:
     X_feat.drop(columns="country",inplace=True)
   X_feat_weights = apply_weights(X_feat,model)
