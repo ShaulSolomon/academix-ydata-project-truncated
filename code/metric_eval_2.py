@@ -40,13 +40,14 @@ def assign_labels_to_clusters(df_core: pd.DataFrame, num_clusters: list) -> pd.D
   df_core['cluster_assigned'] = [K_dict[pid] for pid in df_core.PI_IDS]
   return df_core
 
-def get_metrics(df):
+def get_metrics(df, verbose=False):
   '''
   Using cluster_pred (given by DBScan) and cluster_assigned (given by greedy algo),
   compute Precision, Recall, Mis-Integration, and Mis-Separation.
 
   Parameters:
     df - Dataframe with pmid, pi_id, cluster_pred, cluster_assigned
+    verbose(boolean): should the output be printed
 
   Return:
     num_clusters_db - # of clusters created by DBScan
@@ -60,9 +61,9 @@ def get_metrics(df):
   num_authors = len(np.unique(df.PI_IDS))
   precision = (precision_score(df.cluster_assigned,df.cluster_pred,average='weighted'))
   recall = recall_score(df.cluster_assigned,df.cluster_pred,average='weighted')
-  #print("Number of clusters (DBS): {}\nNumber of unique authors: {}".format(num_clusters_db,num_authors))
-
-  #print("Precision score: {}, Recall score: {}".format(precision, recall))
+  if(verbose):
+          print("Number of clusters (DBS): {}\nNumber of unique authors: {}".format(num_clusters_db,num_authors))
+          print("Precision score: {}, Recall score: {}".format(precision, recall))
   mis_intergration_dict = dict()
   mis_separation_dict = dict()
 
@@ -96,7 +97,8 @@ def get_metrics(df):
   new_col = ["{} cluster(s)".format(i) for i in column]
   df_eval = df_eval[column]
   df_eval.columns = new_col
-  #print(df_eval)
+  if(verbose):
+          print(df_eval)
   return num_clusters_db, num_authors, precision, recall, df_eval
 
 def get_metrics_many(group_cases):
