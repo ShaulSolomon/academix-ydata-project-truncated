@@ -361,3 +361,5 @@ venv/
 .idea/
 .git/
 code/credentenials.ini
+code/credentials.ini
+code/credentials.ini

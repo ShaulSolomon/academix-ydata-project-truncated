@@ -29,7 +29,11 @@ DATA_PATH = LOCAL_PATHS['DATA_PATH']
 #####
 
 
-def get_creds():
+def get_creds() -> dict:
+        """
+        obtain the creds for s3
+        returns dict
+        """
         return s3_dict
 
 
@@ -103,7 +107,9 @@ def upload_to_s3(file, key, AWS_ACCESS_KEY=AWS_ACCESS_KEY, AWS_ACCESS_SECRET_KEY
 
 
 def solve_mac_issue():
-        #code used to solve some issue with ssl in mac
+        """
+        code used to solve some issue with ssl in mac
+        """
         if (not os.environ.get('PYTHONHTTPSVERIFY', '') and
                 getattr(ssl, '_create_unverified_context', None)):
                 ssl._create_default_https_context = ssl._create_unverified_context
