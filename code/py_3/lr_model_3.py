@@ -19,7 +19,7 @@ import seaborn as sns; sns.set()
 
 from sklearn.linear_model import LogisticRegression as LogR
 
-def get_train_test(df,perc_change = 0.8, flag_da_case = False, da_samename_perc = 0.5):
+def get_train_test(df,perc_change = 0.8, flag_da_case = False):
   '''
   Splits the dataframe into Train and Test data, splitting with `perc_change` %.
   To keep a balance of the data, we take the same # of same author pairs to the # of dif author pairs
@@ -44,47 +44,21 @@ def get_train_test(df,perc_change = 0.8, flag_da_case = False, da_samename_perc 
   df_dif = df[df['same_author'] == 1]
   num_dif = len(df_dif.index)
 
-  if flag_da_case:
-    # Get all the pairs with the same name (only 8%)
-    df_same_name = df_dif[(df['same_name'] == 0)]
-    df_dif_name = df_dif[(df['same_name'] == 1)]
-    num_same_name = len(df_same_name.index)
-    num_dif_name = len(df_dif_name.index)  
+  print("Same author #: {}, dif author #: {}".format(num_same,num_dif))
 
-    #Randomize which pairs to take
-    np.random.seed(42)
-
-    #take equal amounts
-    idx_rand_dif = list(np.random.choice(range(num_dif_name),int(num_same*(1-da_samename_perc)),replace=False))
-    idx_rand_same = list(np.random.choice(range(num_same_name),int(num_same * da_samename_perc),replace=False))
-
-    #Of the dif. pair and dif. name pairs, only take similar number to same pairs
-    df_dif_dif =  df_dif_name.iloc[idx_rand_dif]
-    df_dif_same = df_same_name.iloc[idx_rand_same]
-    # print(df_same_name.shape)
-    # print(df_dif.shape)
-    df_dif = pd.concat([df_dif_dif,df_dif_same])
-    perc_train = int(len(df_dif.index)*perc_change)
-
-    print("There are {} pairs being used, half of them with the same author, {} of them as train data".format(num_same*2,perc_train*2))
-
-    train_df = pd.concat((df_same[:perc_train],df_dif[:perc_train]))
-    test_df = pd.concat((df_same[perc_train:],df_dif[perc_train:]))
-    return train_df.iloc[:,:-2] , train_df.iloc[:,-2], test_df.iloc[:,:-2], test_df.iloc[:,-2]
-
-  else:
-    #Randomize which pairs to take
-    np.random.seed(42)
+  #Randomize which pairs to take
+  np.random.seed(42)
+  if num_same < num_dif:
     idx_rand = list(np.random.choice(range(num_dif),num_same,replace=False))
     df_dif = df_dif.iloc[idx_rand]
 
-    perc_train = int(len(df_dif.index)*perc_change)
+  perc_train = int(len(df_dif.index)*perc_change)
 
-    print("There are {} pairs being used, half of them with the same author, {} of them as train data".format(num_same*2,perc_train*2))
+  print("There are {} pairs being used, half of them with the same author, {} of them as train data".format(num_same*2,perc_train*2))
 
-    train_df = pd.concat((df_same[:perc_train],df_dif[:perc_train]))
-    test_df = pd.concat((df_same[perc_train:],df_dif[perc_train:]))
-    return train_df.iloc[:,:-2] , train_df.iloc[:,-2], test_df.iloc[:,:-2], test_df.iloc[:,-2]
+  train_df = pd.concat((df_same[:perc_train],df_dif[:perc_train]))
+  test_df = pd.concat((df_same[perc_train:],df_dif[perc_train:]))
+  return train_df.iloc[:,:-2] , train_df.iloc[:,-2], test_df.iloc[:,:-2], test_df.iloc[:,-2]
 
 
 def sigmoid(x):

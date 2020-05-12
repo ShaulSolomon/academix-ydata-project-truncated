@@ -5,7 +5,6 @@ The features are:
 author, mesh, inst, email, country, forename
 The weights are:  [-1.54 -0.71  0.36  0.06 -1.08 -1.41]
 
-
 Use_case "3_UA_SAME":
 
 Total Precision: 0.6463519117290772	Total Recall: 0.6950929172794258
@@ -85,3 +84,15 @@ Total Precision: 0.3880996510237671	Total Recall: 0.4822443539531714
 mis_integration      0.842105      0.105263      0.052632
 mis_separation       0.823529      0.117647      0.058824
 0.4300802083019277
+
+
+
+
+-------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------
+
+*USING SYNTHETIC DATA - changing forename and email similarity*
+
+Core_data: UA top  (SYNTHETIC). Normalized: No.
+
+

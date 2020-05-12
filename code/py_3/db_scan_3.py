@@ -24,6 +24,7 @@ def db_multiple(ps, df, scaler, use_case, num_cases, model,epsilon):
     '''
     #Get combinations of authors from the given use_case
     authors = sim_matrix_3.get_use_case(df,use_case)
+    print(len(authors))
     if type(authors) == tuple:
         #If we are trying to get two dif. types of authors
         auth_a,auth_b = authors

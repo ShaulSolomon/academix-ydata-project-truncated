@@ -337,8 +337,8 @@ class PaperClusterer:
                       "mesh":mesh_sim,
                       "inst":inst_sim,
                       "email":email_sim,
-                      "country":country_sim}
-                      #,"forename":forename_sim}
+                      "country":country_sim,
+                      "forename":forename_sim}
         #print("sim matrices shapes for author and mesh:")
         num_items=len(df)*len(df)
         feat_df=pd.DataFrame({"author":author_sim.reshape(num_items,),
