@@ -9,8 +9,7 @@ from sklearn.metrics import recall_score
 from collections import defaultdict
 
 import os, sys
-sys.path.append(r'code\py_3')
-import sim_matrix_3 as sim_matrix_3
+import py_3.sim_matrix_3 as sim_matrix_3
 
 import pandas as pd
 import numpy as np

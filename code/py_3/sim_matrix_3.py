@@ -40,14 +40,14 @@ def base_authors(df, use_case):
 
     TODO: Add possible base for disambiguated authors AND/OR one combined base
     '''
-    if use_case == "base_ua":
-      unique_authors = df.groupby('last_author_name')[["PI_IDS"]].nunique()
-      unique_authors = unique_authors[unique_authors["PI_IDS"] == 1].index
-      indie_authors = df[df['last_author_name'].isin(unique_authors)].groupby('last_author_name')['pmid'].nunique().sort_values(ascending=False)
-      indie_author = list(indie_authors.index)[:20]
-      return df[df["last_author_name"].isin(indie_author)]
+    # if use_case == "base_ua":
+    #   unique_authors = df.groupby('last_author_name')[["PI_IDS"]].nunique()
+    #   unique_authors = unique_authors[unique_authors["PI_IDS"] == 1].index
+    #   indie_authors = df[df['last_author_name'].isin(unique_authors)].groupby('last_author_name')['pmid'].nunique().sort_values(ascending=False)
+    #   indie_author = list(indie_authors.index)[:20]
+    #   return df[df["last_author_name"].isin(indie_author)]
 
-    elif use_case == "base_da":
+    if use_case == "base_da":
       unique_authors = df.groupby('last_author_name')[["PI_IDS"]].nunique()
       unique_authors = unique_authors[unique_authors["PI_IDS"] == 2].index
       #Combine rows based off last_author_name 
@@ -188,6 +188,7 @@ def get_similarity_matrix(ps,dfs_authors,scaler=None,flag_base= True):
   same_author_list = list(dfs_authors['last_author_name'].unique())
   total_df = pd.DataFrame()
 
+
   #get dist_matrix for every possible pair...
   for i, same_author in enumerate(same_author_list):
     print("Author {} within {}".format(i+1,len(same_author_list)))
@@ -212,6 +213,7 @@ def get_similarity_matrix(ps,dfs_authors,scaler=None,flag_base= True):
     sim_matrix = paper_clusterer.get_dist_matrix(df_temp, True)
     sim_matrix['same_author'] = pair_col    
 
+
     ### --- Removing Pairs --- ###
 
     #If we are learning our LR weights
@@ -226,7 +228,7 @@ def get_similarity_matrix(ps,dfs_authors,scaler=None,flag_base= True):
           else:
             pairs.append(False)
       sim_matrix = sim_matrix.iloc[pairs]
-      total_df = pd.concat([total_df,sim_matrix])
+    total_df = pd.concat([total_df,sim_matrix])
 
   if flag_base:
     #Normalize the data

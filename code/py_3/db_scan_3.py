@@ -1,12 +1,13 @@
 import py_3.sim_matrix_3 as sim_matrix_3
 import py_3.lr_model_3 as lr_model_3
+import metric_eval_2
 
 from itertools import product
 from sklearn.cluster import DBSCAN as DBS
 import numpy as np
 
 
-def db_multiple(ps, df, scaler, use_case, num_cases, model,epsilon):
+def db_multiple(ps, df, scaler, use_case, num_cases, model,epsilons,flag_find_epsilon=False):
     '''
     Gathers several situations for each use case and calculates their y_hats
 
@@ -15,46 +16,71 @@ def db_multiple(ps, df, scaler, use_case, num_cases, model,epsilon):
         df - dataframe with all the details
         scaler - scaler to normalize our data
         use_case - the use_case we want to explore
-        num_cases - the number of dif. cases we try (of num cases - 66 was the smallest)
+        num_cases - the number of dif. cases we try (if num_auth < num_cases, we only do num_auth)
         model - model learned from the LR model
-        epsilon - needs to be learned but the epsilon for the DB
+        epsilons - if flag_find_epsilon: its a range of values that we are looking for best
+                                         otherwise its one value that we are using as a constant
 
     Return:
-        y_hat_comb - list of dataframe of pmid, pi_id, clus_pred for every use_case
+        if flag_find_epsilon:
+            best_eps - best epsilon
+            f1_scores - list of all f1 scores for epsilons
+        else:
+            y_hat_comb - list of dataframe of pmid, pi_id, clus_pred for every use_case
     '''
     #Get combinations of authors from the given use_case
     authors = sim_matrix_3.get_use_case(df,use_case)
-    print(len(authors))
-    if type(authors) == tuple:
-        #If we are trying to get two dif. types of authors
-        auth_a,auth_b = authors
-        all_comb = list(product(auth_a,auth_b))
-    elif type(authors) == list:
-        all_comb = list(product(authors,authors))
-        #remove duplicates
-        all_comb = [[a, b] for i, [a, b] in enumerate(all_comb) if not any(((a == c and b==d) or (a==d and b==c)) for c, d in all_comb[:i])] 
-    else:
-        print("None of the above")
-        return None
     
+    num_authors = len(authors)
+
     #Take only `num_cases` number of cases
-    np.random.seed(42)
-    rand_idx = np.random.choice(range(len(all_comb)),num_cases,replace=False)
-    all_comb = np.array(all_comb)[rand_idx]
+    if (num_authors > num_cases):
+        np.random.seed(42)
+        rand_idx = np.random.choice(range(num_authors),num_cases,replace=False)
+        authors = list(np.array(authors)[rand_idx])
+    else:
+        print("Only have {} number of authors.".format(num_authors))
 
-    y_hat_comb = []
+    df_all_cases = []
 
-    for i,comb in enumerate(all_comb):
+    for i,auth in enumerate(authors):
         print("Processing combination number {} from {}".format(i+1,num_cases))
-        df_auth = df[df['last_author_name'].isin(comb)]
+        df_auth = df[df['last_author_name'] == auth]
         #Calculate the distance matrix
         dist_mat = lr_model_3.get_dist_matrix(ps,df_auth,scaler, model,flag_no_country = False)
-        #input it through DBS
-        y_hat = DBS(eps=epsilon, min_samples=1, metric="precomputed").fit(dist_mat)
-        df_clus = df_auth[["pmid","PI_IDS"]]
-        df_clus['cluster_pred'] = y_hat.labels_
-        y_hat_comb.append(df_clus)
-        print("\n") 
+        df_all_cases.append([df_auth,dist_mat])
+    
 
-    return y_hat_comb
+    if flag_find_epsilon:
+        best_eps = None
+        best_F1 = 0.0
+        memory_f1 = []
+        for eps in epsilons:
+            y_hat_comb = []
+            for case in df_all_cases:
+                df_clus, df_case = case
+                y_hat = DBS(eps=eps,min_samples=1,metric="precomputed").fit(df_case)
+                df_clus = df_clus[["pmid","PI_IDS"]]
+                df_clus['cluster_pred'] = y_hat.labels_
+                y_hat_comb.append(df_clus)
+            f1_score = metric_eval_2.get_metrics_many(y_hat_comb)
+            memory_f1.append(f1_score)
+            if f1_score > best_F1:
+                best_F1 = f1_score
+                best_eps = eps
+
+        return best_eps, memory_f1
+    
+    else:
+        y_hat_comb = []
+        for case in df_all_cases:
+            df_clus, df_case = case
+            y_hat = DBS(eps=epsilons,min_samples=1,metric="precomputed").fit(df_case)
+            df_clus = df_clus[["pmid","PI_IDS"]]
+            df_clus['cluster_pred'] = y_hat.labels_
+            y_hat_comb.append(df_clus)
+        return(y_hat)
+
+
+
 
