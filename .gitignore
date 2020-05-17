@@ -362,3 +362,4 @@ venv/
 .git/
 code/credentials.ini
 data/labeled_data/academix_enriched_large.json
+.DS_Store
