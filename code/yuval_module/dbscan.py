@@ -9,13 +9,14 @@ import numpy as np
 import utils as utils
 
 def run_db_scan(author_df: pd.DataFrame, 
+                eps:float=1.27,
                 gammas:dict={
                                 "author":0.5,
                                 "mesh":0.3,
                                 "inst":0.1,
                                 "email":0.1,
-                                "country":0.0}, 
-                eps:float=1.27 ):
+                                "country":0.0} 
+                 ):
         """
         run DBscan using yuval's code
         params:
