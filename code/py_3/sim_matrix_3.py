@@ -28,64 +28,6 @@ def get_res_papers(ps,author_name):
     df=ps.get_dataset()
     return df[df['last_author_name']==author_name]
 
-def base_authors(df, use_case):
-    '''
-    Finds for us the most published authors to use as training examples for LR model
-
-    input:
-    df - dataframe with all the data stored
-    use_case - possible use-cases:
-      1) UA case (top 20 UA authors) // use_case = "base_ua"
-      2) DA case (3 DA's where each publisher has at least 4 papers)// use_case = "base_da
-
-    TODO: Add possible base for disambiguated authors AND/OR one combined base
-    '''
-    
-    if use_case == "base_da":
-      unique_authors = df.groupby('last_author_name')[["PI_IDS"]].nunique()
-      unique_authors = unique_authors[unique_authors["PI_IDS"] == 2].index
-      #Combine rows based off last_author_name 
-      indie_authors = df[df['last_author_name'].isin(unique_authors)].groupby(['last_author_name','PI_IDS'])[['pmid']].nunique().reset_index(1)
-
-      indie_authors = indie_authors.join(indie_authors, lsuffix="_l", rsuffix='_r').reset_index()
-      indie_authors = indie_authors[indie_authors["PI_IDS_l"] != indie_authors["PI_IDS_r"]] \
-                                    .drop_duplicates("last_author_name",keep="first") \
-                                    .set_index('last_author_name')
-      #Each need to have more than 5 papers and need to have an equal number of papers
-      possible_authors = list(indie_authors[((indie_authors["pmid_l"] > 33) |
-                                            (indie_authors["pmid_l"] < 28)) &
-                                            ((indie_authors["pmid_r"] > 33) |
-                                            (indie_authors['pmid_r'] < 28)) &
-                                            (indie_authors['pmid_l'] > 2) &
-                                            (indie_authors['pmid_r'] > 2)].index)
-      # unique_authors = df.groupby('last_author_name')[["PI_IDS"]].nunique()
-      # unique_authors = unique_authors[unique_authors["PI_IDS"] == 3].index
-      # indie_authors = df[df['last_author_name'].isin(unique_authors)].groupby(['last_author_name','PI_IDS'])[['pmid']]                                                                  .nunique().reset_index(1)
-
-      # indie_authors2 = indie_authors.join(indie_authors, lsuffix="_l", rsuffix='_r')
-      # indie_authors = indie_authors2.join(indie_authors, lsuffix="_l", rsuffix='_r').reset_index()
-
-      # indie_authors = indie_authors[(indie_authors["PI_IDS_l"] != indie_authors["PI_IDS_r"]) & \
-      #                               (indie_authors["PI_IDS_l"] != indie_authors["PI_IDS"]) & \
-      #                               (indie_authors["PI_IDS_r"] != indie_authors["PI_IDS"])].drop_duplicates("last_author_name",keep="first")                                                                                        .set_index('last_author_name')
-
-      # possible_authors = list(indie_authors[(indie_authors["pmid_l"] > 3) & \
-      #                                       (indie_authors["pmid_r"] > 3) & \
-      #                                       (indie_authors["pmid"] > 3)].index)
-
-      # unique_authors = df.groupby('last_author_name')[["PI_IDS"]].nunique()
-      # unique_authors = unique_authors[unique_authors["PI_IDS"] == 2].index
-      # #Combine rows based off last_author_name 
-      # indie_authors = df[df['last_author_name'].isin(unique_authors)].groupby(['last_author_name','PI_IDS'])[['pmid']].nunique().reset_index(1)
-      # indie_authors = indie_authors.join(indie_authors, lsuffix="_l", rsuffix='_r').reset_index()
-      # indie_authors = indie_authors[indie_authors["PI_IDS_l"] != indie_authors["PI_IDS_r"]].drop_duplicates("last_author_name",keep="first").set_index('last_author_name')
-      # #Each need to have more than 5 papers and need to have an equal number of papers
-      # possible_authors = np.concatenate((possible_authors,(list(indie_authors[(indie_authors["pmid_l"] > 4) & 
-      #                                       (indie_authors["pmid_r"] > 4)].index))))
-      return df[df["last_author_name"].isin(possible_authors)]
-    else:
-        print("USE CASE GIVEN NOT FAMILIAR - PLEASE CHECK DOCSTRING")
-
 def get_use_case(df, use_case):
     '''
     In order to get accurate results, we need to run many scenarios for each use case. 
@@ -94,35 +36,13 @@ def get_use_case(df, use_case):
     Parameters:
         df - Dataframe of publications
         use_case = possible use_cases
-                    3_ua_same - 3 Unique Authors with similar num papers
-                    2_ua_dif - 2 Unique Authors with dif. num papers
                     2_da_same - 2 Disambiguated Authors with same num papers
                     2_da_dif -  2 Disambiguated Authors with dif num papers
 
     Return:
         List of all possible author names that fit the use_case
     '''
-    if use_case == "3_ua_same":
-        #Three Unique author where each is ~ 30 papers...
-        #Get Unique authors
-        unique_authors = df.groupby('last_author_name')[["PI_IDS"]].nunique()
-        unique_authors = unique_authors[unique_authors["PI_IDS"] == 1].index
-        #Take only whose papers are between 27 and 33 papers
-        bool_authors_30 = df[df['last_author_name'].isin(unique_authors)].groupby('last_author_name')['pmid'].size().between(27,33)
-        possible_authors_30 = list(unique_authors[bool_authors_30])
-        return possible_authors_30
-    elif use_case == "2_ua_dif":
-         #Two Unique authors where one is ~ 30 papers and the other is ~10 papers
-         #Get Unique authors
-        unique_authors = df.groupby('last_author_name')[["PI_IDS"]].nunique()
-        unique_authors = unique_authors[unique_authors["PI_IDS"] == 1].index
-        #Take only whose papers are between 27-33 and 8-12
-        bool_authors_30 = df[df['last_author_name'].isin(unique_authors)].groupby('last_author_name')['pmid'].size().between(27,33)
-        bool_authors_10 = df[df['last_author_name'].isin(unique_authors)].groupby('last_author_name')['pmid'].size().between(8,12)
-        possible_authors_30 = list(unique_authors[bool_authors_30])
-        possible_authors_10 = list(unique_authors[bool_authors_10])   
-        return (possible_authors_30,possible_authors_10)
-    elif use_case == '2_da_same':
+    if use_case == '2_da_same':
         #Two disambiguated authors where both have more than 5 papers and have a close number of papers (3 or less)
         #Get disambiguated authors
         unique_authors = df.groupby('last_author_name')[["PI_IDS"]].nunique()
@@ -235,3 +155,80 @@ def get_similarity_matrix(ps,dfs_authors,scaler=None,flag_base= True):
   print("Returning Similarity Matrix.")
   print("Number of pairs after cleaning: ", len(total_df.index))
   return total_df, scaler
+
+
+def split_authors(pd,df):
+  #TODO: WRITE DOCSTRING
+
+  #TWO DA CASE
+  unique_authors = df.groupby('last_author_name')[["PI_IDS"]].nunique()
+  unique_authors = unique_authors[unique_authors["PI_IDS"] == 2].index
+  #Combine rows based off last_author_name
+  indie_authors = df[df['last_author_name'].isin(unique_authors)].groupby(['last_author_name','PI_IDS'])[['pmid']].nunique().reset_index(1)
+  indie_authors = indie_authors.join(indie_authors, lsuffix="_l", rsuffix='_r').reset_index()
+  indie_authors = indie_authors[indie_authors["PI_IDS_l"] != indie_authors["PI_IDS_r"]] \
+                              .drop_duplicates("last_author_name",keep="first") \
+                              .set_index('last_author_name')
+  #Each need at least 4 papers and dif. has to be greater than 6
+  possible_authors_2 = list(indie_authors[(indie_authors["pmid_l"] > 3) & (indie_authors["pmid_r"] > 3)].index)
+
+
+  #THREE DA CASE
+  unique_authors = df.groupby('last_author_name')[["PI_IDS"]].nunique()
+  unique_authors = unique_authors[unique_authors["PI_IDS"] == 3].index
+  indie_authors = df[df['last_author_name'].isin(unique_authors)].groupby(['last_author_name','PI_IDS'])[['pmid']]                                                                  .nunique().reset_index(1)
+
+  indie_authors2 = indie_authors.join(indie_authors, lsuffix="_l", rsuffix='_r')
+  indie_authors = indie_authors2.join(indie_authors, lsuffix="_l", rsuffix='_r').reset_index()
+
+  indie_authors = indie_authors[(indie_authors["PI_IDS_l"] != indie_authors["PI_IDS_r"]) & \
+                                (indie_authors["PI_IDS_l"] != indie_authors["PI_IDS"]) & \
+                                (indie_authors["PI_IDS_r"] != indie_authors["PI_IDS"])] \
+                                .drop_duplicates("last_author_name",keep="first") \
+                                .set_index('last_author_name')                     
+
+  possible_authors_3 = list(indie_authors[((indie_authors["pmid_l"] > 3) & \
+                                  (indie_authors["pmid_r"] > 3)) | \
+                                  ((indie_authors["pmid_l"] > 3) & \
+                                  (indie_authors["pmid"] > 3)) | \
+                                  ((indie_authors["pmid_r"] > 3) & \
+                                  (indie_authors["pmid"] > 3))].index)
+
+  auth_core = []
+  auth_usecase = []
+  auth_eps = []
+
+  np.random.seed(42)
+
+  num_auth_2 = len(possible_authors_2)
+  print(num_auth_2)
+  rand2 = np.random.choice(range(num_auth_2),num_auth_2, replace=False)
+  possible_authors_2 = list(np.array(possible_authors_2)[rand2])
+  core_2, usecase_2, eps_2 = possible_authors_2[:int(num_auth_2*(2/5))], \
+                            possible_authors_2[int(num_auth_2*(2/5)):2*int(num_auth_2*(2/5))],\
+                            possible_authors_2[2*int(num_auth_2*(2/5)):]
+
+  num_auth_3 = len(possible_authors_3)
+  print(num_auth_3)
+  rand3 = np.random.choice(range(num_auth_3),num_auth_3, replace=False)
+  possible_authors_3 = list(np.array(possible_authors_3)[rand3])
+  core_3, usecase_3, eps_3 = possible_authors_3[:int(num_auth_3*(2/5))], \
+                            possible_authors_3[int(num_auth_3*(2/5)):2*int(num_auth_3*(2/5))],\
+                            possible_authors_3[2*int(num_auth_3*(2/5)):]
+
+  auth_core.append(core_2)
+  auth_core.append(core_3)
+  auth_core = (auth_core[0] + auth_core[1])
+
+  auth_usecase.append(usecase_2)
+  auth_usecase.append(usecase_3)
+  auth_usecase = (auth_usecase[0] + auth_usecase[1])
+
+  auth_eps.append(eps_2)
+  auth_eps.append(eps_3)
+  auth_eps = (auth_eps[0] + auth_eps[1])
+
+  return auth_core, auth_eps, auth_usecase
+
+
+

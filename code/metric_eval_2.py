@@ -113,12 +113,15 @@ def get_metrics_many(group_cases):
   '''
   total_recall = np.array([])
   total_precision = np.array([])
+  total_weights = np.array([])
   total_df_eval = pd.DataFrame()
 
   for i,group in enumerate(group_cases):
     df_core = assign_labels_to_clusters(group, group['cluster_pred'].unique())
+    num_papers = df_core.shape[0]
     num_clusters_db, num_authors, precision, recall, df_eval = get_metrics(df_core)
     print("Situation {}".format(i))
+    print("Num Papers: ", num_papers)
     print("Num Clusters: ", num_clusters_db)
     print("Num Unique Authors: ", num_authors)
     print("Precision: ", precision)
@@ -127,18 +130,22 @@ def get_metrics_many(group_cases):
     print("\n-------------------\n")
     total_precision = np.concatenate((total_precision,[precision]))
     total_recall = np.concatenate((total_recall,[recall]))
+    total_weights = np.concatenate((total_weights,[num_papers]))
     total_df_eval = (total_df_eval.reindex_like(df_eval).fillna(0) + df_eval.fillna(0).fillna(0))
 
-  
-  # //TODO: Do we need a weighted mean or because the cases are similar enough, we can give them equal worth? 
+  #Make the precision/recall weighted to the number of papers that we are checking:
+  total_papers = np.sum(total_weights)
+  total_weights = total_weights / total_papers
+  total_precision = total_precision * total_weights
+  total_recall = total_recall * total_weights
 
-  total_precision = np.mean(total_precision)
-  total_recall = np.mean(total_recall)
+  total_precision = np.sum(total_precision)
+  total_recall = np.sum(total_recall)
   print("\n\nTotal Precision: {}\tTotal Recall: {}".format(total_precision,total_recall))
   total_df_eval = total_df_eval.T / total_df_eval.T.sum()
   print(total_df_eval.T)
   F1 = 2 * (total_precision * total_recall) / (total_precision + total_recall)
-  return F1
+  return F1, total_precision, total_recall, total_df_eval.T
 
 
 if __name__ == "__main__":
