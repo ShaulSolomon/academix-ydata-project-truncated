@@ -7,6 +7,7 @@ from scipy.sparse import coo_matrix, csr_matrix
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.cluster import DBSCAN
 import seaborn as sns
+from sklearn.preprocessing import StandardScaler
 from tqdm import tqdm
 
 from yuval_module.paper_source import PaperSource
@@ -19,7 +20,8 @@ class PaperClusterer:
                         "mesh":0.3,
                         "inst":0.1,
                         "email":0.1,
-                        "country":0.0}
+                        "country":0.0},
+                scaler=None
                 ):
         
         self.paper_source = PaperSource()
@@ -30,6 +32,7 @@ class PaperClusterer:
         self.tfidf_model=models.TfidfModel.load("./yuval_module/tfidf_corpus_papers4.bin")
         self.num_dict_terms=len(self.cur_dict.keys())
         self.gammas = gammas 
+        self.scaler = scaler
 
     def empty_last_author_response(self, row):
         res_row={"pmid":row.pmid,
@@ -272,6 +275,9 @@ class PaperClusterer:
 
     def dbscan_cluster(self, dist, paper_weights):
         #MAXIMAL_DIST=1.37
+        if(self.scaler):
+                print(dist.shape)
+                dist= self.scaler.transform(dist)
         clustering = DBSCAN(eps=self.eps, min_samples=2, metric="precomputed").fit(dist, sample_weight=paper_weights)
         return clustering.labels_
 

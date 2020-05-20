@@ -8,6 +8,7 @@ import pandas as pd
 import numpy as np
 import utils as utils
 
+
 def run_db_scan(author_df: pd.DataFrame, 
                 eps:float=1.27,
                 gammas:dict={
@@ -15,8 +16,9 @@ def run_db_scan(author_df: pd.DataFrame,
                                 "mesh":0.3,
                                 "inst":0.1,
                                 "email":0.1,
-                                "country":0.0} 
-                 ):
+                                "country":0.0},
+                scaler=None
+                ):
         """
         run DBscan using yuval's code
         params:
@@ -25,7 +27,7 @@ def run_db_scan(author_df: pd.DataFrame,
                 eps(float): epsilon
         """
         print("Running Yuval's DBscan\n")
-        paper_clusterer=PaperClusterer(eps, gammas)
+        paper_clusterer=PaperClusterer(eps, gammas, scaler )
         # dist matrix
         combined_dist, combined_sim, total_df = paper_clusterer.get_dist_matrix(author_df)
         # cluster
