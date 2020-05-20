@@ -128,3 +128,31 @@ author, mesh, inst, email, country, forename
 3da: [-0.02  0.17 -0.1   0.04 -0.28 -0.12]
 
 mix: [ 0.03  0.11 -0.07  0.03 -0.11 -0.21]
+
+
+---------------------------------------------------------------------
+---------------------------------------------------------------------
+
+Mixture of 2 and 3 (2/5 of each):
+
+The score is:  0.6377768313458262
+The features are:
+author, mesh, inst, email, country, forename
+The weights are:  [ 0.1   0.11 -0.02 -0.04 -0.14 -0.1 ]
+
+Epsilon found: 0.508
+
+CASE:  2_da_same
+
+F1-Score: 0.5798269292623093	Total Precision: 0.545675664205076	Total Recall: 0.6185383244206772
+                 1 cluster(s)
+mis_integration           1.0
+mis_separation            1.0
+
+
+CASE:  2_da_dif
+
+F1-Score: 0.6977341180195267	Total Precision: 0.6795110781120338	Total Recall: 0.7169614984391258
+                 2 cluster(s)
+mis_integration           1.0
+mis_separation            1.0
