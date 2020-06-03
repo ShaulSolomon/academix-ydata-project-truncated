@@ -16,13 +16,16 @@ class PaperClusterer:
     def __init__(self, 
                 eps=1.37,
                 gammas= {
-                        "author":0.5,
-                        "mesh":0.3,
-                        "inst":0.1,
-                        "email":0.1,
-                        "country":0.0},
+                        "author": 0.5,
+                        "mesh": 0.3,
+                        "inst": 0.1,
+                        "email": 0.1,
+                        "country": 0.0},
                 scaler=None
                 ):
+        """
+        Class for clustering researcher publications using DBscan
+        """
         
         self.paper_source = PaperSource()
         self.cur_researcher_id=self.paper_source.cur_researcher_id #first free researcher id
