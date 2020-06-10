@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer as tfidf
 from utils import PROJECT_ROOT, DATA_PATH
+import re
 
 
 '''Helper Functions'''
@@ -24,10 +25,11 @@ class MeshEmbeddings():
             :param str mesh_name - name of the given mesh term
             :return list - vector embedding of mesh term
         '''
+        mesh_name = re.sub(r"\/.*","",mesh_name)
         if mesh_name in self.mesh_dict:
             return self.mesh_dict[mesh_name]
         else:
-            print("MESH NAME NOT FOUND")
+            print("MESH NAME NOT FOUND: "+ mesh_name)
             return None
 
     def get_mesh_emb(self, mesh_names: list, method: str = "avg" ) -> np.array:
@@ -44,8 +46,11 @@ class MeshEmbeddings():
                 return np.zeros((1,64),dtype=np.float)
         for mesh in mesh_names:
             mesh_vec = self.get_mesh_vec(mesh)
-            mesh_emb = np.vstack((mesh_emb,mesh_vec))
-        
+            if mesh_vec is not None:
+                mesh_emb = np.vstack((mesh_emb,mesh_vec))
+        #check to see if mesh_emb is empty 
+        if mesh_emb.shape[0]==0:
+                return np.zeros((1,64),dtype=np.float)
         if method == "avg":
             return np.mean(mesh_emb, axis=0).reshape(1,-1)
         else:
@@ -60,7 +65,6 @@ class MeshEmbeddings():
         '''
         lst = []
         for mesh_terms in df_mesh:
-                print(mesh_terms)
                 lst.append(self.get_mesh_emb(mesh_terms))
         return np.array(lst).squeeze()
 
