@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer as tfidf
+from utils import PROJECT_ROOT, DATA_PATH
 
 
 '''Helper Functions'''
@@ -12,7 +13,7 @@ def csv_to_df(df):
 
 class MeshEmbeddings():
 
-    def __init__(self,path_file):
+    def __init__(self,path_file=PROJECT_ROOT+"data/mesh_data/MeSHFeatureGeneratedByDeepWalk.csv"):
         df = pd.read_csv(path_file,header=None).set_index(0)
         self.mesh_dict = csv_to_df(df)
     
