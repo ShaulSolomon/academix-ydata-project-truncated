@@ -40,6 +40,8 @@ class MeshEmbeddings():
             :return np.array - vector embedding of the mesh_terms
         '''
         mesh_emb = np.array([], dtype=np.float64).reshape(0,64)
+        if mesh_names is None:
+                return np.zeros((1,64),dtype=np.float)
         for mesh in mesh_names:
             mesh_vec = self.get_mesh_vec(mesh)
             mesh_emb = np.vstack((mesh_emb,mesh_vec))
@@ -49,6 +51,18 @@ class MeshEmbeddings():
         else:
             print("METHOD NOT FOUND")
             return None
+
+    def get_feat_mesh(self, df_mesh: list) -> np.array:
+        '''
+                For Dataset - converts mesh row into (n,64) np array
+                        :param list  - list of mesh terms per publication
+                        :returns np.array - vector embeddings for mesh terms
+        '''
+        lst = []
+        for mesh_terms in df_mesh:
+                print(mesh_terms)
+                lst.append(self.get_mesh_emb(mesh_terms))
+        return np.array(lst).squeeze()
 
 def mesh2int(row: list, dict_meshtoint: dict) -> list:
     '''
