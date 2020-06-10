@@ -41,7 +41,7 @@ class MeshEmbeddings():
                         :"avg" - getting the mean
             :return np.array - vector embedding of the mesh_terms
         '''
-        mesh_emb = np.array([], dtype=np.float64).reshape(0,64)
+        mesh_emb = np.array([], dtype=np.float32).reshape(0,64)
         if mesh_names is None:
                 return np.zeros((1,64),dtype=np.float)
         for mesh in mesh_names:
