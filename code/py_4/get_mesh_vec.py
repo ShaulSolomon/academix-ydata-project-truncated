@@ -65,11 +65,11 @@ def mesh2int(row: list, dict_meshtoint: dict) -> list:
         lst.append(dict_meshtoint[value])
     return lst
 
-def get_mesh_gram_freq(df_mesh: pd.DataFrame, N: int) -> pd.DataFrame:
+def get_mesh_gram_freq(df: pd.DataFrame, N: int) -> pd.DataFrame:
     '''
-    For each of the mesh terms, get the IDF for 1-gram, until N-gram.
+    For each of the mesh t6erms, get the IDF for 1-gram, until N-gram.
 
-        :param pd.DataFrame df_mesh - Dataframe with each row the mesh terms
+        :param pd.DataFrame df - Dataframe with each row the mesh terms
         :param int N - max size of N terms
         :return pd.DataFrame - new column with frequency 
     '''
@@ -81,7 +81,26 @@ def get_mesh_gram_freq(df_mesh: pd.DataFrame, N: int) -> pd.DataFrame:
     # dict_inttomesh = {i:mesh for i,mesh in enumerate(set_mesh)}
     dict_meshtoint = {mesh:i for i,mesh in enumerate(set_mesh)}
     df_mesh = pd.Series([mesh2int(row, dict_meshtoint) for row in df['mesh'].values])
+    # TODO: Turn sparse matrix into frequency (avg?)
+    return df_mesh
 
+def get_mesh_count(df: pd.DataFrame) -> list:
+    '''
+    For each mesh row, return number of mesh terms.
+    If there are no mesh terms, return 0
+
+        :param pd.DataFrame df - our datafame
+        :return list - count of mesh terms
+    '''
+    all_mesh = df['mesh'].values.tolist()
+    lst = []
+    for mesh in all_mesh:
+        if mesh is None:
+            lst.append(0)
+        else:
+            lst.append(len(mesh))
+    return lst
+    
 if __name__ == "__main__":
   
     PATH_FILE = r"/home/ubuntu/Proj/AYP/data/mesh_data/MeSHFeatureGeneratedByDeepWalk.csv"
