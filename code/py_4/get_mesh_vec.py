@@ -17,7 +17,28 @@ class MeshEmbeddings():
     def __init__(self,path_file=PROJECT_ROOT+"data/mesh_data/MeSHFeatureGeneratedByDeepWalk.csv"):
         df = pd.read_csv(path_file,header=None).set_index(0)
         self.mesh_dict = csv_to_df(df)
-    
+        self.dict_freq = None
+
+    def set_mesh_freq(self, all_mesh: list):
+        '''
+          Given all the mesh terms, it creates a dictionary for "mesh_term":term_frequency
+
+            :param list all_mesh - list with all of the possible mesh terms (a list of lists).
+
+            Updates self.dict_freq instead of returning a value
+        '''
+        dict_freq = {}
+        total = 0
+        for mesh_list in all_mesh:
+            if mesh_list is not None:
+                for mesh in mesh_list:
+                    mesh = re.sub(r"\/.*","",mesh)
+                    dict_freq[mesh] = dict_freq.get(mesh, 0) + 1 
+                    total = total + 1 
+        for key,value in dict_freq.items():
+            dict_freq[key] = value / total
+        self.dict_freq = dict_freq   
+            
     def get_mesh_vec(self, mesh_name: str) -> list:
         '''
         For a given mesh term, returns its 64 d vector embedding
@@ -38,13 +59,14 @@ class MeshEmbeddings():
 
             :param list mesh_names - list of all the mesh names
             :param str method - possible methods on joining vectors
-                        :"avg" - getting the mean
+                        :"avg" - getting the mean based off term frequency
             :return np.array - vector embedding of the mesh_terms
         '''
         mesh_emb = np.array([], dtype=np.float32).reshape(0,64)
         if mesh_names is None:
                 return np.zeros((1,64),dtype=np.float)
         for mesh in mesh_names:
+            mesh = re.sub(r"\/.*","",mesh)
             mesh_vec = self.get_mesh_vec(mesh)
             if mesh_vec is not None:
                 mesh_emb = np.vstack((mesh_emb,mesh_vec))
@@ -52,7 +74,16 @@ class MeshEmbeddings():
         if mesh_emb.shape[0]==0:
                 return np.zeros((1,64),dtype=np.float)
         if method == "avg":
-            return np.mean(mesh_emb, axis=0).reshape(1,-1)
+            freq_list = np.array([])
+            if self.dict_freq is None:
+                print("Need to set_mesh_freq.")
+                return None
+            for name in mesh_names:  
+                name = re.sub(r"\/.*","",name)
+                if name in self.mesh_dict:
+                    freq_list = np.append(freq_list, self.dict_freq[name])
+            total = np.sum(freq_list)
+            return np.sum((mesh_emb * freq_list.reshape(-1,1)) / total,axis=0).reshape(1,-1)
         else:
             print("METHOD NOT FOUND")
             return None
@@ -65,7 +96,7 @@ class MeshEmbeddings():
         '''
         lst = []
         for mesh_terms in df_mesh:
-                lst.append(self.get_mesh_emb(mesh_terms))
+            lst.append(self.get_mesh_emb(mesh_terms))
         return np.array(lst).squeeze()
 
 def mesh2int(row: list, dict_meshtoint: dict) -> list:
@@ -86,7 +117,10 @@ def mesh2int(row: list, dict_meshtoint: dict) -> list:
 
 def get_mesh_gram_freq(df: pd.DataFrame, N: int) -> pd.DataFrame:
     '''
-    For each of the mesh t6erms, get the IDF for 1-gram, until N-gram.
+    CURRENTLY NOT IN USE - USING set_mesh_freq 
+    
+
+    For each of the mesh terms, get the IDF for 1-gram, until N-gram.
 
         :param pd.DataFrame df - Dataframe with each row the mesh terms
         :param int N - max size of N terms
@@ -123,6 +157,6 @@ def get_mesh_count(df: pd.DataFrame) -> list:
 if __name__ == "__main__":
   
     PATH_FILE = r"/home/ubuntu/Proj/AYP/data/mesh_data/MeSHFeatureGeneratedByDeepWalk.csv"
-
-    msh = MeshEmbeddings(PATH_FILE)
+    msh = get_mesh_vec.MeshEmbeddings(PATH_FILE)
+    msh.set_mesh_freq(list(df['mesh']))
     print(msh.get_mesh_emb(['Humans','Abdomen']).shape)
