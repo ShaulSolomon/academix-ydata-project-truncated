@@ -88,15 +88,18 @@ class MeshEmbeddings():
                     # If it didnt exist before, give it a value of one
                     else:
                         freq_list = np.append(freq_list, [1])
+
             # Need to inverse the frequency of each of the terms. So most popular term gets least value.
             
             #JUST TO TEST
-            return np.sum(mesh_emb,axis=0).reshape(1,-1)
-            
-            total = np.sum(freq_list)
-            freq_list = (freq_list / total)
-            total = np.sum(1 - freq_list)
-            freq_list = ((1-freq_list.reshape(-1,1)) / total)
+#             return np.sum(mesh_emb,axis=0).reshape(1,-1)
+            if len(freq_list) == 1:
+                return mesh_emb
+            total = np.sum(freq_list) # 5 3 2 -> 10
+            freq_list = (freq_list / total) # 0.5 0.3 0.2
+            freq_list = (1- freq_list) # 0.5 0.7 0.8
+            total = np.sum(freq_list) # 2
+            freq_list = ((freq_list.reshape(-1,1)) / total.reshape(-1,1))
             return np.sum(mesh_emb * freq_list,axis=0).reshape(1,-1)
         else:
             print("METHOD NOT FOUND")
