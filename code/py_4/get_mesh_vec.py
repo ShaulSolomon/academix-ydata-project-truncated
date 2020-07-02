@@ -21,10 +21,9 @@ class MeshEmbeddings():
 
     def set_mesh_freq(self, all_mesh: list):
         '''
-          Given all the mesh terms, it creates a dictionary for "mesh_term":term_frequency
+        Given all the mesh terms, it creates a dictionary for "mesh_term":term_frequency
 
             :param list all_mesh - list with all of the possible mesh terms (a list of lists).
-
             Updates self.dict_freq instead of returning a value
         '''
         dict_freq = {}
@@ -33,10 +32,11 @@ class MeshEmbeddings():
             if mesh_list is not None:
                 for mesh in mesh_list:
                     mesh = re.sub(r"\/.*","",mesh)
-                    dict_freq[mesh] = dict_freq.get(mesh, 0) + 1 
+                    dict_freq[mesh] = dict_freq.get(mesh, 1) + 1 
                     total = total + 1 
-        for key,value in dict_freq.items():
-            dict_freq[key] = value / total
+#         ## Was going to divide all by total, but no need ###
+#         for key,value in dict_freq.items():
+#             dict_freq[key] = value / total
         self.dict_freq = dict_freq   
             
     def get_mesh_vec(self, mesh_name: str) -> list:
@@ -80,10 +80,19 @@ class MeshEmbeddings():
                 return None
             for name in mesh_names:  
                 name = re.sub(r"\/.*","",name)
-                if name in self.mesh_dict:
-                    freq_list = np.append(freq_list, self.dict_freq[name])
+                if name in self.mesh_dict.keys():
+                    # If the word appears in the corpus before
+                    if name in self.dict_freq.keys():
+                        freq_list = np.append(freq_list, self.dict_freq[name])
+                    # If it didnt exist before, give it a value of one
+                    else:
+                        freq_list = np.append(freq_list, [1])
+            # Need to inverse the frequency of each of the terms. So most popular term gets least value.
             total = np.sum(freq_list)
-            return np.sum((mesh_emb * freq_list.reshape(-1,1)) / total,axis=0).reshape(1,-1)
+            freq_list = (freq_list / total)
+            total = np.sum(1 - freq_list)
+            freq_list = ((1-freq_list.reshape(-1,1)) / total)
+            return np.sum(mesh_emb * freq_list,axis=0).reshape(1,-1)
         else:
             print("METHOD NOT FOUND")
             return None
