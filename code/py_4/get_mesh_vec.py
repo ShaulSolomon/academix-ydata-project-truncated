@@ -18,6 +18,7 @@ class MeshEmbeddings():
         df = pd.read_csv(path_file,header=None).set_index(0)
         self.mesh_dict = csv_to_df(df)
         self.dict_freq = None
+        self.mesh_missing = set()
 
     def set_mesh_freq(self, all_mesh: list):
         '''
@@ -50,7 +51,7 @@ class MeshEmbeddings():
         if mesh_name in self.mesh_dict:
             return self.mesh_dict[mesh_name]
         else:
-            print("MESH NAME NOT FOUND: "+ mesh_name)
+            self.mesh_missing.add("MESH NAME NOT FOUND: "+ mesh_name)
             return None
 
     def get_mesh_emb(self, mesh_names: list, method: str = "avg" ) -> np.array:
@@ -88,6 +89,10 @@ class MeshEmbeddings():
                     else:
                         freq_list = np.append(freq_list, [1])
             # Need to inverse the frequency of each of the terms. So most popular term gets least value.
+            
+            #JUST TO TEST
+            return np.sum(mesh_emb,axis=0).reshape(1,-1)
+            
             total = np.sum(freq_list)
             freq_list = (freq_list / total)
             total = np.sum(1 - freq_list)
