@@ -38,8 +38,19 @@ class MeshEmbeddings():
 #         ## Was going to divide all by total, but no need ###
 #         for key,value in dict_freq.items():
 #             dict_freq[key] = value / total
-        self.dict_freq = dict_freq   
-            
+        self.dict_freq = dict_freq 
+        # Number of Documents - N
+        self.N = len(all_mesh)
+        
+    def set_mesh_vectorizer(self, all_mesh: list):
+        self.corpus, self.vocab = self.get_mesh_corpus_vocab(all_mesh)
+        vocab = [str(x) for x in self.vocab]
+        self.pipe = Pipeline([('count', CountVectorizer(vocabulary=vocab)),
+                 ('tfid', TfidfTransformer())]).fit(mesh_emb.corpus) 
+#         pipe['count'].transform(mesh_emb.corpus).toarray()
+#         pipe['tfid'].idf_
+        
+        
     def get_mesh_vec(self, mesh_name: str) -> list:
         '''
         For a given mesh term, returns its 64 d vector embedding
@@ -91,16 +102,23 @@ class MeshEmbeddings():
 
             # Need to inverse the frequency of each of the terms. So most popular term gets least value.
             
-            #JUST TO TEST
-#             return np.sum(mesh_emb,axis=0).reshape(1,-1)
+
             if len(freq_list) == 1:
                 return mesh_emb
-            total = np.sum(freq_list) # 5 3 2 -> 10
-            freq_list = (freq_list / total) # 0.5 0.3 0.2
-            freq_list = (1- freq_list) # 0.5 0.7 0.8
-            total = np.sum(freq_list) # 2
-            freq_list = ((freq_list.reshape(-1,1)) / total.reshape(-1,1))
-            return np.sum(mesh_emb * freq_list,axis=0).reshape(1,-1)
+            
+            # Inverse Document Frequency - log(N/df_i)
+            IDF = np.log(self.N / freq_list.reshape(-1,1))
+            print(IDF)
+            
+            # 1 - df_i
+#             total = np.sum(freq_list) # 5 3 2 -> 10
+#             freq_list = (freq_list / total) # 0.5 0.3 0.2
+#             freq_list = (1- freq_list) # 0.5 0.7 0.8
+#             total = np.sum(freq_list) # 2
+#             freq_list = ((freq_list.reshape(-1,1)) / total.reshape(-1,1))
+            return np.sum(mesh_emb * IDF,axis=0).reshape(1,-1)
+        if method == "avg-sklearn":
+            pass  
         else:
             print("METHOD NOT FOUND")
             return None
@@ -135,45 +153,43 @@ class MeshEmbeddings():
         return np.array(lst)
 
 
-def mesh2int(row: list, dict_meshtoint: dict) -> list:
-    '''
-    CURRENTLY NOT IN USE - USING set_mesh_freq 
-    
-    Helper function for get_mesh_gram_freq. Turns mesh terms into label equivalent
+    def mesh2int(self,row: list, dict_meshtoint: dict) -> str:
+        '''
+        CURRENTLY NOT IN USE - USING set_mesh_freq 
 
-        :param pd.Series row - list of mesh terms for given row
-        :param dict dict_meshtoint - dict of mesh terms to their int labels
-        :return None - if row is empty
-                list - list of labels
-    '''
-    if row is None:
-        return None
-    lst = []
-    for value in row:
-        lst.append(dict_meshtoint[value])
-    return lst
+        Helper function for get_mesh_gram_freq. Turns mesh terms into label equivalent
 
-def get_mesh_gram_freq(df: pd.DataFrame, N: int) -> pd.DataFrame:
-    '''
-    CURRENTLY NOT IN USE - USING set_mesh_freq 
-    
+            :param pd.Series row - list of mesh terms for given row
+            :param dict dict_meshtoint - dict of mesh terms to their int labels
+            :return None - if row is empty
+                    list - list of labels
+        '''
+        if row is None:
+            return "0"
+        lst = ""
+        for value in row:
+            lst = lst + " " + str(dict_meshtoint[value])
+        return lst.strip()
 
-    For each of the mesh terms, get the IDF for 1-gram, until N-gram.
+    def get_mesh_corpus_vocab(self, all_mesh: list) -> pd.DataFrame:
+        '''
+        CURRENTLY NOT IN USE - USING set_mesh_freq 
 
-        :param pd.DataFrame df - Dataframe with each row the mesh terms
-        :param int N - max size of N terms
-        :return pd.DataFrame - new column with frequency 
-    '''
-    all_mesh = df['mesh'].values.tolist()
-    set_mesh = set()
-    for mesh in all_mesh:
-        if mesh is not None:
-            set_mesh.update(mesh)
-    # dict_inttomesh = {i:mesh for i,mesh in enumerate(set_mesh)}
-    dict_meshtoint = {mesh:i for i,mesh in enumerate(set_mesh)}
-    df_mesh = pd.Series([mesh2int(row, dict_meshtoint) for row in df['mesh'].values])
-    # TODO: Turn sparse matrix into frequency (avg?)
-    return df_mesh
+
+        For each of the mesh terms, get the IDF for 1-gram, until N-gram.
+
+            :param pd.DataFrame df - Dataframe with each row the mesh terms
+            :return pd.DataFrame - new column with frequency 
+        '''
+        set_mesh = set()
+        for mesh in all_mesh:
+            if mesh is not None:
+                set_mesh.update(mesh)
+        # dict_inttomesh = {i:mesh for i,mesh in enumerate(set_mesh)}
+        dict_meshtoint = {mesh:i for i,mesh in enumerate(set_mesh,1)}
+        df_mesh = [self.mesh2int(row, dict_meshtoint) for row in all_mesh]
+        size_dict = len(dict_meshtoint.keys())
+        return df_mesh, list(range(size_dict))
 
 
 if __name__ == "__main__":
