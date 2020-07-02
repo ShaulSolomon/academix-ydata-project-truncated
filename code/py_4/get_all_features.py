@@ -11,6 +11,7 @@ class VAE_Features():
         self.df_train = df_train
         self.mesh_features = get_mesh_vec.MeshEmbeddings(mesh_path_file)
         self.mesh_features.set_mesh_freq(df_train.mesh.to_list())
+    
         
     def get_all_features(self,df):
         '''
@@ -21,6 +22,7 @@ class VAE_Features():
                 - num mesh terms (get_mesh_features
         '''
         feat = self.get_mesh_features(df)
+        self.input_dims = feat.shape[1]
         return feat
         
     def get_mesh_features(self, df):
@@ -33,7 +35,4 @@ class VAE_Features():
         '''
         mesh_emb = self.mesh_features.get_feat_mesh(df.mesh.to_list())
         mesh_count = self.mesh_features.get_mesh_count(df).reshape(-1,1)
-        print(df.mesh.to_list())
-        print(mesh_emb.shape)
-        print(mesh_count.shape)
         return np.hstack((mesh_emb,mesh_count))
