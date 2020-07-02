@@ -107,9 +107,30 @@ class MeshEmbeddings():
         for mesh_terms in df_mesh:
             lst.append(self.get_mesh_emb(mesh_terms))
         return np.array(lst).squeeze()
+    
+    
+    def get_mesh_count(self, df: pd.DataFrame) -> list:
+        '''
+        For each mesh row, return number of mesh terms.
+        If there are no mesh terms, return 0
+
+            :param pd.DataFrame df - our dataframe
+            :return list - count of mesh terms
+        '''
+        all_mesh = df['mesh'].values.tolist()
+        lst = []
+        for mesh in all_mesh:
+            if mesh is None:
+                lst.append(0)
+            else:
+                lst.append(len(mesh))
+        return np.array(lst)
+
 
 def mesh2int(row: list, dict_meshtoint: dict) -> list:
     '''
+    CURRENTLY NOT IN USE - USING set_mesh_freq 
+    
     Helper function for get_mesh_gram_freq. Turns mesh terms into label equivalent
 
         :param pd.Series row - list of mesh terms for given row
@@ -146,23 +167,7 @@ def get_mesh_gram_freq(df: pd.DataFrame, N: int) -> pd.DataFrame:
     # TODO: Turn sparse matrix into frequency (avg?)
     return df_mesh
 
-def get_mesh_count(df: pd.DataFrame) -> list:
-    '''
-    For each mesh row, return number of mesh terms.
-    If there are no mesh terms, return 0
 
-        :param pd.DataFrame df - our datafame
-        :return list - count of mesh terms
-    '''
-    all_mesh = df['mesh'].values.tolist()
-    lst = []
-    for mesh in all_mesh:
-        if mesh is None:
-            lst.append(0)
-        else:
-            lst.append(len(mesh))
-    return lst
-    
 if __name__ == "__main__":
   
     PATH_FILE = r"/home/ubuntu/Proj/AYP/data/mesh_data/MeSHFeatureGeneratedByDeepWalk.csv"
