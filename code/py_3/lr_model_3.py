@@ -21,7 +21,7 @@ import seaborn as sns; sns.set()
 
 from sklearn.linear_model import LogisticRegression as LogR
 
-def get_train_test(df,perc_change = 0.8, flag_da_case = False):
+def get_train_test(df,perc_change = 0.8):
   '''
   Splits the dataframe into Train and Test data, splitting with `perc_change` %.
   To keep a balance of the data, we take the same # of same author pairs to the # of dif author pairs
@@ -33,7 +33,6 @@ def get_train_test(df,perc_change = 0.8, flag_da_case = False):
   Input:
     df - dataframe with all the data
     perc_change - percentage of data to be in Train set
-    flag_da_case - flag whether or not we are dealing with a DA case
     da_samename_perc - perc of pairs not with the same author but have the same name
 
   Output:
@@ -65,6 +64,31 @@ def get_train_test(df,perc_change = 0.8, flag_da_case = False):
   test_df = pd.concat((df_same[perc_train:],df_dif[perc_train:]))
   return train_df.iloc[:,:-1] , train_df.iloc[:,-1], test_df.iloc[:,:-1], test_df.iloc[:,-1]
 
+def get_train_all(df):
+    '''
+    Ensures that there are an equal number of same_author and dif_author pairs so that the model wont be biased to dif. author cases.
+    '''
+    #Get equal number of same and different for Logistic Regression
+    df_same = df[df['same_author'] == 0]
+    num_same = len(df_same.index)
+    df_dif = df[df['same_author'] == 1]
+    num_dif = len(df_dif.index)
+
+    print("Same author #: {}, dif author #: {}".format(num_same,num_dif))
+
+    #Randomize which pairs to take
+    np.random.seed(42)
+    if num_same < num_dif:
+        idx_rand = list(np.random.choice(range(num_dif),num_same,replace=False))
+        df_dif = df_dif.iloc[idx_rand]
+    else:
+        idx_rand = list(np.random.choice(range(num_same),num_dif,replace=False))
+        df_same = df_same.iloc[idx_rand]
+
+    print("There are {} pairs being used, half of them with the same author.".format(min(num_same,num_dif)*2))
+
+    train_df = pd.concat((df_same,df_dif))
+    return train_df.iloc[:,:-1] , train_df.iloc[:,-1]
 
 def sigmoid(x):
   return 1 / (1 + math.exp(-x))
@@ -85,14 +109,17 @@ def log_model(X_train,y_train,X_test,y_test):
   # Create regularization hyperparameter space
   C = np.logspace(0, 4, 10)
   # Create hyperparameter options
-  hyperparameters = dict(C=C, penalty=penalty)
+  solver = ['newton-cg', 'lbfgs', 'liblinear', 'sag', 'saga']
+  hyperparameters = dict(C=C, penalty=penalty, solver=solver)
   log = LogR()
   clf = GridSearchCV(log, hyperparameters, cv=5, verbose=0)
   best_model = clf.fit(X_train, y_train)
   best_penalty = best_model.best_estimator_.get_params()['penalty']
   best_C = best_model.best_estimator_.get_params()['C']
-  print('Best Penalty:', best_penalty)
-  print('Best C:', best_C)
+  best_solver = best_model.best_estimator_.get_params()['solver']
+  print('Best Penalty: ', best_penalty)
+  print('Best C: ', best_C)
+  print('Using solver: ',best_solver)
   predict_prob = apply_weights(X_test,best_model)
   score = clf.score(X_test,y_test)
   return score, predict_prob, best_model

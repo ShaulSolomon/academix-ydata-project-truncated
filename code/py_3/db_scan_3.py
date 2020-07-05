@@ -52,7 +52,7 @@ def db_multiple(ps, df, scaler,authors, use_case, num_cases, model,epsilon):
     for case in df_all_cases:
         df_clus, df_case = case
         y_hat = DBS(eps=epsilon,min_samples=1,metric="precomputed").fit(df_case)
-        df_clus = df_clus[["pmid","PI_IDS"]]
+        df_clus = df_clus.loc[["pmid","PI_IDS"]]
         df_clus['cluster_pred'] = y_hat.labels_
         y_hat_comb.append(df_clus)
     
