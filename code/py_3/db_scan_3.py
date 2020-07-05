@@ -49,6 +49,7 @@ def db_multiple(ps, df, scaler,authors, use_case, num_cases, model,epsilon):
     
 
     y_hat_comb = []
+    
     for case in df_all_cases:
         df_clus, df_case = case
         y_hat = DBS(eps=epsilon,min_samples=1,metric="precomputed").fit(df_case)
