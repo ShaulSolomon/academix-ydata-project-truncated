@@ -79,7 +79,10 @@ def pipeline(df, sim_matrix_train,dict_auth,ps):
         except:
             continue
             
-    return best_F1, best_penalty, best_C, best_solver, best_eps, best_weights, best_bias
-    
-    
-    
+    return {'best_F1':best_F1,
+            'best_penalty':best_penalty,
+            'best_C':best_C,
+            'best_solver':best_solver,
+            'best_eps':best_eps,
+            'best_weights':best_weights,
+            'best_bias':best_bias}
