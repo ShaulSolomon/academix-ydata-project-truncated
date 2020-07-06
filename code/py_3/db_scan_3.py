@@ -26,16 +26,19 @@ def db_multiple(ps, df, scaler,authors, use_case, weights,bias,epsilon):
     '''
     #Get combinations of authors from the given use_case
     auth_df = df[df['last_author_name'].isin(authors)]
+        
     authors = sim_matrix_3.get_use_case(auth_df,use_case)
     
     num_cases = len(authors)
 
 
     df_all_cases = []
+    all_papers = []
 
     for i,auth in enumerate(authors):
         print("Processing combination number {} from {}".format(i+1,num_cases))
         df_auth = df[df['last_author_name'] == auth]
+        all_papers.append(df_auth.shape[0])
         #Calculate the distance matrix
         
         df_sim,_ = sim_matrix_3.get_similarity_matrix(ps,df_auth,scaler,flag_base = False)
@@ -56,7 +59,7 @@ def db_multiple(ps, df, scaler,authors, use_case, weights,bias,epsilon):
         df_clus['cluster_pred'] = y_hat.labels_
         y_hat_comb.append(df_clus)
     
-    return y_hat_comb
+    return y_hat_comb, num_cases, np.mean(np.array(all_papers))
 
 
 def find_epsilon(ps, df, scaler, authors, model,epsilons):
