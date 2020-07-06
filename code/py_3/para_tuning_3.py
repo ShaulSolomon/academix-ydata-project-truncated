@@ -18,9 +18,15 @@ import itertools
 
 from sklearn.linear_model import LogisticRegression as LogR
 
-def pipeline(df, sim_matrix_train,dict_auth,ps):
+def pipeline(sim_matrix_train,dict_auth,ps) -> dict:
     '''
     Pipelines from Author Names -> Pairs Weights -> Log R model -> DB Scan -> F1 Score
+    
+        :param pd.DataFrame sim_matrix_train - the train data pre-converted to a similarity matrix
+        :param dict dict_auth - per author combination of all the df's assosciated and their respective sim. matrices
+        :param PaperSource ps - for yuvals code
+        
+        :return dict - the hyperparameters and the weights/bias after running every possible permutation permissible
     '''
     X_train, y_train = lr_model_3.get_train_all(sim_matrix_train)
 

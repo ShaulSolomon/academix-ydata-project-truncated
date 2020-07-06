@@ -7,7 +7,7 @@ from sklearn.cluster import DBSCAN as DBS
 import numpy as np
 
 
-def db_multiple(ps, df, scaler,authors, use_case, num_cases, model,epsilon):
+def db_multiple(ps, df, scaler,authors, use_case, num_cases, weights,bias,epsilon):
     '''
     Gathers several situations for each use case and calculates their y_hats
 
@@ -44,7 +44,13 @@ def db_multiple(ps, df, scaler,authors, use_case, num_cases, model,epsilon):
         print("Processing combination number {} from {}".format(i+1,num_cases))
         df_auth = df[df['last_author_name'] == auth]
         #Calculate the distance matrix
-        dist_mat = lr_model_3.get_dist_matrix(ps,df_auth,scaler, model,flag_no_country = False)
+        
+        df_sim,_ = sim_matrix_3.get_similarity_matrix(ps,df_auth,scaler,flag_base = False)
+        X_feat = df_sim.iloc[:,:-1]
+        X_feat_weights = [lr_model_3.sigmoid(np.dot(x_test,weights) + bias) for x_test in X_feat.to_numpy()]
+        num_paper = int(np.sqrt(len(X_feat_weights)))
+        #Need a square matrix for DBScan
+        dist_mat = np.array(X_feat_weights).reshape(num_paper,-1)
         df_all_cases.append([df_auth,dist_mat])
     
 
@@ -53,7 +59,7 @@ def db_multiple(ps, df, scaler,authors, use_case, num_cases, model,epsilon):
     for case in df_all_cases:
         df_clus, df_case = case
         y_hat = DBS(eps=epsilon,min_samples=1,metric="precomputed").fit(df_case)
-        df_clus = df_clus.loc[["pmid","PI_IDS"]]
+        df_clus = df_clus[["pmid","PI_IDS"]]
         df_clus['cluster_pred'] = y_hat.labels_
         y_hat_comb.append(df_clus)
     
