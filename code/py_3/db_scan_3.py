@@ -7,7 +7,7 @@ from sklearn.cluster import DBSCAN as DBS
 import numpy as np
 
 
-def db_multiple(ps, df, scaler,authors, use_case, num_cases, weights,bias,epsilon):
+def db_multiple(ps, df, scaler,authors, use_case, weights,bias,epsilon):
     '''
     Gathers several situations for each use case and calculates their y_hats
 
@@ -28,15 +28,8 @@ def db_multiple(ps, df, scaler,authors, use_case, num_cases, weights,bias,epsilo
     auth_df = df[df['last_author_name'].isin(authors)]
     authors = sim_matrix_3.get_use_case(auth_df,use_case)
     
-    num_authors = len(authors)
+    num_cases = len(authors)
 
-    #Take only `num_cases` number of cases
-    if (num_authors > num_cases):
-        np.random.seed(42)
-        rand_idx = np.random.choice(range(num_authors),num_cases,replace=False)
-        authors = list(np.array(authors)[rand_idx])
-    else:
-        print("Only have {} number of authors.".format(num_authors))
 
     df_all_cases = []
 
