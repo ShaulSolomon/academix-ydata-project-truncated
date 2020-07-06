@@ -5,6 +5,8 @@ from utils import PROJECT_ROOT, DATA_PATH
 import re
 import py_4.get_mesh_vec as get_mesh_vec
 import py_4.get_names_vec as get_names_vec
+import py_4.get_co_authors_vec as get_co_authors_vec
+
 
 class VAE_Features():
     
@@ -13,6 +15,7 @@ class VAE_Features():
         self.mesh_features = get_mesh_vec.MeshEmbeddings(mesh_path_file)
         self.mesh_features.set_mesh_freq(df_train.mesh.to_list())
         self.name_emb=get_names_vec.NameEmbeddings()
+        self.co_authors_emb=get_co_authors_vec.CoAuthorEmbeddings()
     
         
     def get_all_features(self,df):
@@ -24,8 +27,10 @@ class VAE_Features():
                 - num mesh terms (get_mesh_features
         '''
         #feat = self.get_mesh_features(df)
+        feat = self.get_co_authors_features(df)
         #self.input_dims = feat.shape[1]
-        feat = self.get_names_features(df)
+        self.input_dims = len(feat)
+
         return feat
         
     def get_mesh_features(self, df):
@@ -39,14 +44,29 @@ class VAE_Features():
         mesh_emb = self.mesh_features.get_feat_mesh(df.mesh.to_list())
         mesh_count = self.mesh_features.get_mesh_count(df).reshape(-1,1)
         return np.hstack((mesh_emb,mesh_count))
+
+    def get_co_authors_features(self, df):
+        '''
+        Returns all the features related to co authors .
+        
+            - co_authors to vector        
+        '''
+        df['co_authors']=df.authors.apply( lambda x: [i['name'] for i in x] )
+        res=[]
+        for au_list in df['co_authors'].to_list():
+            res.extend(self.co_authors_emb.infer_vec([i for i in au_list]))
+        return res
+
     def get_names_features(self, df):
         '''
         Returns all the features related to names .
         
-            - name to vec vectors        
+            - name to vectors       
         '''
         df['last_names']=df.last_author_name.apply(lambda x: x.split(',')[0])
         res=[]
         for name in df['last_names'].to_list():
             res.extend(self.name_emb.infer_vec([i for i in name]))
         return res
+
+
