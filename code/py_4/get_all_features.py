@@ -7,6 +7,8 @@ import py_4.get_mesh_vec as get_mesh_vec
 import py_4.get_names_vec as get_names_vec
 import py_4.get_cat_vec as get_cat_vet
 import string
+import py_4.get_co_authors_vec as get_co_authors_vec
+
 
 class VAE_Features():
     
@@ -16,6 +18,8 @@ class VAE_Features():
         self.mesh_features.set_mesh_freq(df_train.mesh.to_list())
         self.name_emb=get_names_vec.NameEmbeddings()
         self.cat_feats =  get_cat_vet.CatFeat(df_train)
+        self.co_authors_emb=get_co_authors_vec.CoAuthorEmbeddings()
+
     
         
     def get_all_features(self,df):
@@ -26,15 +30,21 @@ class VAE_Features():
                 - mesh embeddings (get_mesh_features)
                 - num mesh terms (get_mesh_features
         '''
+
         feat_mesh = self.get_mesh_features(df)
-        feat_name = self.get_names_features(df)
+        feat_coauth = self.get_co_authors_features(df)
+
         feat_cat = self.get_cat_features(df)
         
-        feat = np.hstack((feat_mesh,feat_name,feat_cat))
+        feat = np.hstack((feat_mesh,feat_coauth,feat_cat))
+        
+        # SANITY TEST
+        # feat_name = self.get_names_features(df)
         
         feat = feat_name
         
         self.input_dims = feat.shape[1]
+
         return feat
         
     def get_mesh_features(self, df):
@@ -48,20 +58,36 @@ class VAE_Features():
         mesh_emb = self.mesh_features.get_feat_mesh(df.mesh.to_list())
         mesh_count = self.mesh_features.get_mesh_count(df).reshape(-1,1)
         return np.hstack((mesh_emb,mesh_count))
-    
+
+
+    def get_co_authors_features(self, df):
+        '''
+        Returns all the features related to co authors .
+        
+            - co_authors to vector        
+        '''
+        df['co_authors']=df.authors.apply( lambda x: [i['name'] for i in x] )
+        res=[]
+        for au_list in df['co_authors'].to_list():
+            res.extend(self.co_authors_emb.infer_vec([i for i in au_list]))
+              
+        name_vec = np.array(res).reshape(df.shape[0],-1)
+        name_freq = self.get_freq_char(df.co_authors)
+        return np.hstack((name_vec,name_freq))
+
     def get_names_features(self, df):
         '''
         Returns all the features related to names .
         
-            - name to vec vectors        
+            - name to vectors       
         '''
         df['last_names']=df.last_author_name.apply(lambda x: x.split(',')[0])
         res=[]
         for name in df['last_names'].to_list():
             res.extend(self.name_emb.infer_vec([i for i in name]))
-        name_vec = np.array(res).reshape(df.shape[0],-1)
-        name_freq = self.get_freq_char(df.last_names)
-        return np.hstack((name_vec,name_freq))
+            
+        return res
+
     
     def get_freq_char(df_coauth):
         all_freq_char = []
@@ -80,4 +106,3 @@ class VAE_Features():
         ohe_inst = self.cat_feats.get_ohe_inst(df.last_author_inst)
         ohe_country = self.cat_feats.get_ohe_country(df.last_author_country)
         return np.hstack((ohe_inst,ohe_country))
-        
