@@ -8,6 +8,10 @@ USED TO GET ONE-HOT ENCODING FOR CATEGORICAL VARIABLES
 [x] - Institution (We can take the top 1000)
 [x] - Country (We can take all that we see ~ 122) (The states are more equally distributed...)
 
+gcv = get_cat_vec.CatFeat(df)
+ohe_inst = gcv.get_ohe_inst(df.last_author_inst)
+ohe_country = gcv.get_ohe_country(df.last_author_country)
+
 '''
 
 class CatFeat():
