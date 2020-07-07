@@ -1,5 +1,7 @@
+import pandas as pd
 def get_names():
         """
         get names for training embedding
         """
-        return ["Roy Granit", "Shaul Solomon", "clarke", "davies","davis","kelley","kelly","wood","macdonald","woods","mcdonald","rogers","thompson","rodgers","cooke","cook","stevens"]
+        return pd.read_json('./py_4/last_names.json', orient='values')[0].to_list()
+        #return ["Roy Granit", "Shaul Solomon", "clarke", "davies","davis","kelley","kelly","wood","macdonald","woods","mcdonald","rogers","thompson","rodgers","cooke","cook","stevens"]
