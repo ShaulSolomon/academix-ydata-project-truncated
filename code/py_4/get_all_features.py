@@ -25,8 +25,15 @@ class VAE_Features():
         Goes through all the other functions and returns the full vector embedding for all of the features
         
             Currently implemented:
-                - mesh embeddings (get_mesh_features)
-                - num mesh terms (get_mesh_features
+                [x] mesh embeddings 
+                [x] num mesh terms 
+                [x] coauthor embeddings 
+                [x] # of coauthors
+                [-] coauthor name char frequencies  [currently commented out]
+                [x] OneHotEncoding for Institution [if appear at least 5 times]
+                [x] OneHotEncoding for Country 
+                [ ] Pub Year
+                
         '''
 
         feat_mesh = self.get_mesh_features(df)
@@ -36,9 +43,7 @@ class VAE_Features():
         
         # SANITY TEST
         # feat_name = self.get_names_features(df)
-        
-        feat = feat_name
-        
+                
         self.input_dims = feat.shape[1]
 
         return feat
@@ -64,12 +69,15 @@ class VAE_Features():
         '''
         df['co_authors']=df.authors.apply( lambda x: [i['name'] for i in x] )
         res=[]
+        count_coauth = []
         for au_list in df['co_authors'].to_list():
             res.extend(self.co_authors_emb.infer_vec([i for i in au_list]))
-              
+            count_coauth.append(len(au_list))
+
         name_vec = np.array(res).reshape(df.shape[0],-1)
-        name_freq = self.get_freq_char(df.co_authors)
-        return np.hstack((name_vec,name_freq))
+        count_coauth = np.array(count_coauth).reshape(-1,1)
+        #name_freq = self.get_freq_char(df.co_authors) 
+        return np.hstack((name_vec,count_coauth))
 
     def get_names_features(self, df):
         '''
@@ -85,7 +93,7 @@ class VAE_Features():
         return res
 
     
-    def get_freq_char(df_coauth):
+    def get_freq_char(self,df_coauth):
         all_freq_char = []
         dict_char_freq_base = {}
         for c in string.ascii_lowercase[:26]:

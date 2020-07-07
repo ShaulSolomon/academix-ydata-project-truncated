@@ -1,22 +1,22 @@
 CASE: 2_da_same	Number of authors: 13	Number of papers: 14.846153846153847
 
-F1-Score: 1.0	Total Precision: 1.0	Total Recall: 1.0
-                 1 cluster(s)
-mis_integration           1.0
-mis_separation            1.0
+F1-Score: 0.9319978645495286	Total Precision: 0.9473893981666002	Total Recall: 0.917098445595855
+                 1 cluster(s)  2 cluster(s)
+mis_integration      0.863636      0.136364
+mis_separation       0.863636      0.136364
 
 
 CASE: 2_da_dif	Number of authors: 29	Number of papers: 27.896551724137932
 
-F1-Score: 1.0	Total Precision: 1.0	Total Recall: 1.0
-                 1 cluster(s)
-mis_integration           1.0
-mis_separation            1.0
+F1-Score: 0.9705068372677842	Total Precision: 0.9782170857572587	Total Recall: 0.9629171817058096
+                 1 cluster(s)  2 cluster(s)
+mis_integration      0.933333      0.066667
+mis_separation       0.933333      0.066667
 
 
 CASE: 3_da	Number of authors: 37	Number of papers: 26.486486486486488
 
-F1-Score: 1.0	Total Precision: 1.0	Total Recall: 1.0
+F1-Score: 0.9518845422781921	Total Precision: 0.969719387755102	Total Recall: 0.9346938775510203
                  1 cluster(s)
 mis_integration           1.0
 mis_separation            1.0
