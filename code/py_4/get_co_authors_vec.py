@@ -3,7 +3,7 @@ from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 import pandas as pd
 from os import makedirs, path
 from utils import PROJECT_ROOT, DATA_PATH
-
+ 
 class CoAuthorEmbeddings():
     """
     class for handeling co-author vector
