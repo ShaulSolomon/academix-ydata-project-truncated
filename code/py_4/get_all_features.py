@@ -6,6 +6,7 @@ import re
 import py_4.get_mesh_vec as get_mesh_vec
 import py_4.get_names_vec as get_names_vec
 import py_4.get_cat_vec as get_cat_vet
+import string
 
 class VAE_Features():
     
@@ -59,8 +60,21 @@ class VAE_Features():
         for name in df['last_names'].to_list():
             res.extend(self.name_emb.infer_vec([i for i in name]))
         name_vec = np.array(res).reshape(df.shape[0],-1)
-        
-        return name_vec
+        name_freq = self.get_freq_char(df.last_names)
+        return np.hstack((name_vec,name_freq))
+    
+    def get_freq_char(df_coauth):
+        all_freq_char = []
+        dict_char_freq_base = {}
+        for c in string.ascii_lowercase[:26]:
+            dict_char_freq_base[c] = 0
+        for name in df_coauth:
+            txt = re.sub(", ","","".join(np.array(name).flatten())).lower()
+            dict_char_freq = dict_char_freq_base.copy()
+            for c in txt.lower():
+                dict_char_freq[c] += 1
+            all_freq_char.append(list(dict_char_freq.values()) / np.sum(list(dict_char_freq.values())))
+        return np.array(all_freq_char)
     
     def get_cat_features(self,df):
         ohe_inst = self.cat_feats.get_ohe_inst(df.last_author_inst)
