@@ -1,0 +1,24 @@
+CASE: 2_da_same	Number of authors: 13	Number of papers: 14.846153846153847
+
+F1-Score: 1.0	Total Precision: 1.0	Total Recall: 1.0
+                 1 cluster(s)
+mis_integration           1.0
+mis_separation            1.0
+
+
+CASE: 2_da_dif	Number of authors: 29	Number of papers: 27.896551724137932
+
+F1-Score: 1.0	Total Precision: 1.0	Total Recall: 1.0
+                 1 cluster(s)
+mis_integration           1.0
+mis_separation            1.0
+
+
+CASE: 3_da	Number of authors: 37	Number of papers: 26.486486486486488
+
+F1-Score: 1.0	Total Precision: 1.0	Total Recall: 1.0
+                 1 cluster(s)
+mis_integration           1.0
+mis_separation            1.0
+
+

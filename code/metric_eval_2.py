@@ -103,7 +103,8 @@ def get_metrics(df, verbose=False):
 
 def get_metrics_many(group_cases):
   '''
-  Iterate through each of the cases and extract their individual metrics and get a total scoring
+  Iterate through each of the cases and extract their individual metrics and get a total scoring.
+  Scores are weighted by their number of papers
 
   Parameters:
     group_cases - list of all the dataframes of each DB case

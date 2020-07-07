@@ -7,7 +7,7 @@ from sklearn.cluster import DBSCAN as DBS
 import numpy as np
 
 
-def db_multiple(ps, df, scaler,authors, use_case, num_cases, model,epsilon):
+def db_multiple(ps, df, scaler,authors, use_case, weights,bias,epsilon):
     '''
     Gathers several situations for each use case and calculates their y_hats
 
@@ -26,29 +26,32 @@ def db_multiple(ps, df, scaler,authors, use_case, num_cases, model,epsilon):
     '''
     #Get combinations of authors from the given use_case
     auth_df = df[df['last_author_name'].isin(authors)]
+        
     authors = sim_matrix_3.get_use_case(auth_df,use_case)
     
-    num_authors = len(authors)
+    num_cases = len(authors)
 
-    #Take only `num_cases` number of cases
-    if (num_authors > num_cases):
-        np.random.seed(42)
-        rand_idx = np.random.choice(range(num_authors),num_cases,replace=False)
-        authors = list(np.array(authors)[rand_idx])
-    else:
-        print("Only have {} number of authors.".format(num_authors))
 
     df_all_cases = []
+    all_papers = []
 
     for i,auth in enumerate(authors):
         print("Processing combination number {} from {}".format(i+1,num_cases))
         df_auth = df[df['last_author_name'] == auth]
+        all_papers.append(df_auth.shape[0])
         #Calculate the distance matrix
-        dist_mat = lr_model_3.get_dist_matrix(ps,df_auth,scaler, model,flag_no_country = False)
+        
+        df_sim,_ = sim_matrix_3.get_similarity_matrix(ps,df_auth,scaler,flag_base = False)
+        X_feat = df_sim.iloc[:,:-1]
+        X_feat_weights = [lr_model_3.sigmoid(np.dot(x_test,weights) + bias) for x_test in X_feat.to_numpy()]
+        num_paper = int(np.sqrt(len(X_feat_weights)))
+        #Need a square matrix for DBScan
+        dist_mat = np.array(X_feat_weights).reshape(num_paper,-1)
         df_all_cases.append([df_auth,dist_mat])
     
 
     y_hat_comb = []
+    
     for case in df_all_cases:
         df_clus, df_case = case
         y_hat = DBS(eps=epsilon,min_samples=1,metric="precomputed").fit(df_case)
@@ -56,7 +59,7 @@ def db_multiple(ps, df, scaler,authors, use_case, num_cases, model,epsilon):
         df_clus['cluster_pred'] = y_hat.labels_
         y_hat_comb.append(df_clus)
     
-    return y_hat_comb
+    return y_hat_comb, num_cases, np.mean(np.array(all_papers))
 
 
 def find_epsilon(ps, df, scaler, authors, model,epsilons):

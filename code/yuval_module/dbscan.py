@@ -3,6 +3,10 @@ Run DB scan using Yuval's original code
 """
 from yuval_module.paper_clusterer import PaperClusterer
 from yuval_module.paper_source import PaperSource
+import py_3.sim_matrix_3 as sim_matrix_3
+import py_3.lr_model_3 as lr_model_3
+import metric_eval_2
+
 import sys
 import pandas as pd
 import numpy as np
@@ -27,10 +31,36 @@ def run_db_scan(author_df: pd.DataFrame,
                 eps(float): epsilon
         """
         print("Running Yuval's DBscan\n")
-        paper_clusterer=PaperClusterer(eps, gammas, scaler )
+        paper_clusterer=PaperClusterer(eps, gammas, scaler)
         # dist matrix
         combined_dist, combined_sim, total_df = paper_clusterer.get_dist_matrix(author_df)
         # cluster
         res_clusters, cluster_dfs=paper_clusterer.cluster_res(total_df)
-        cluster_dfs=cluster_dfs.rename(columns={'cluster':'cluster_pred'})
+        cluster_dfs = cluster_dfs.rename(columns={'cluster':'cluster_pred'})
         return cluster_dfs
+    
+    
+def run_multiple_df_scan(ps, auth_df, scaler,use_case, num_cases,eps = None,params=None):
+    
+    #Get combinations of authors from the given use_case
+    authors = sim_matrix_3.get_use_case(auth_df,use_case)
+
+    num_authors = len(authors)
+
+
+    y_hat_comb = []
+    all_papers = []
+
+    for i,auth in enumerate(authors):
+        print("Processing combination number {} from {}".format(i+1,num_authors))
+        df_auth = auth_df[auth_df['last_author_name'] == auth]
+        all_papers.append(df_auth.shape[0])
+        #Calculate the distance matrix
+        if eps is not None:
+            cluster_dfs = run_db_scan(df_auth,eps,params)
+        else:
+            cluster_dfs = run_db_scan(df_auth)
+        y_hat_comb.append(cluster_dfs[["pmid","PI_IDS","cluster_pred"]])
+    
+    return y_hat_comb, num_authors, np.mean(np.array(all_papers))
+

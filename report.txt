@@ -139,6 +139,7 @@ The score is:  0.6377768313458262
 The features are:
 author, mesh, inst, email, country, forename
 The weights are:  [ 0.1   0.11 -0.02 -0.04 -0.14 -0.1 ]
+                  [-0.05 -0.02 -0.29  0.06 -0.31 -0.07] (Another example)
 
 Epsilon found: 0.508
 
