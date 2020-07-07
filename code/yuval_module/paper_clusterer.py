@@ -147,8 +147,6 @@ class PaperClusterer:
                 return self.build_distance_matrix(for_clustering_df, True)
             combined_dist, combined_sim = self.build_distance_matrix(for_clustering_df, False)
         return combined_dist, for_clustering_df, combined_sim
-        
-
 
 
     def infer_all(self, papers_df):

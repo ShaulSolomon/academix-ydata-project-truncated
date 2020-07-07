@@ -30,9 +30,10 @@ class PaperSource:
             datasets={
                     "enriched_labeled" : "enriched_labeled_dataset.json",
                     "not_enriched_labeled": "not_enriched_labeled_dataset.csv",
-                    "mini" : "academix_enriched_mini.json"
+                    "mini" : "academix_enriched_mini.json",
+                    "enriched_labeled_dataset_large" : "enriched_labeled_dataset_large.json"
                     }
-            self.data=s3func.get_dataframe_from_s3(self.creds['AWS_ACCESS_KEY'],
+            self.data=s3func.get_dataframe_from_s3(self.creds['AWS_ACCESS_KEY'] ,
                 self.creds['AWS_ACCESS_SECRET_KEY'],
                 self.creds['BUCKET'],
                 file=datasets[set_name],

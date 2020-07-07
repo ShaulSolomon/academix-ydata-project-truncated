@@ -1,0 +1,24 @@
+CASE:  2_da_same
+
+F1-Score: 0.6829673936679759	Total Precision: 0.70393535652603	Total Recall: 0.6632124352331605
+                 2 cluster(s)
+mis_integration           1.0
+mis_separation            1.0
+
+
+CASE:  2_da_dif
+
+F1-Score: 0.7014144340548955	Total Precision: 0.7580441776853419	Total Recall: 0.6526576019777502
+                 2 cluster(s)  5 cluster(s)
+mis_integration      0.952381      0.047619
+mis_separation       0.952381      0.047619
+
+
+CASE:  3_da
+
+F1-Score: 0.6938857005345009	Total Precision: 0.7401545993406867	Total Recall: 0.6530612244897959
+                 2 cluster(s)
+mis_integration           1.0
+mis_separation            1.0
+
+
