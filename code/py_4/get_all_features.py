@@ -20,8 +20,6 @@ class VAE_Features():
         self.cat_feats =  get_cat_vet.CatFeat(df_train)
         self.co_authors_emb=get_co_authors_vec.CoAuthorEmbeddings()
 
-    
-        
     def get_all_features(self,df):
         '''
         Goes through all the other functions and returns the full vector embedding for all of the features
@@ -33,9 +31,7 @@ class VAE_Features():
 
         feat_mesh = self.get_mesh_features(df)
         feat_coauth = self.get_co_authors_features(df)
-
         feat_cat = self.get_cat_features(df)
-        
         feat = np.hstack((feat_mesh,feat_coauth,feat_cat))
         
         # SANITY TEST
