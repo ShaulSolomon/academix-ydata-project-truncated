@@ -8,7 +8,7 @@ import py_4.get_names_vec as get_names_vec
 import py_4.get_cat_vec as get_cat_vet
 import string
 import py_4.get_co_authors_vec as get_co_authors_vec
-
+from sklearn.preprocessing import StandardScaler
 
 class VAE_Features():
     
@@ -19,10 +19,11 @@ class VAE_Features():
         self.name_emb=get_names_vec.NameEmbeddings()
         self.cat_feats =  get_cat_vet.CatFeat(df_train)
         self.co_authors_emb=get_co_authors_vec.CoAuthorEmbeddings()
+        self.scaler = None
 
     def get_all_features(self,df):
         '''
-        Goes through all the other functions and returns the full vector embedding for all of the features
+        Goes through all the other functions and returns the full vector embedding for all of the features (added scaled)
         
             Currently implemented:
                 [x] mesh embeddings 
@@ -49,7 +50,16 @@ class VAE_Features():
                 
         feat = feat_mesh
         self.input_dims = feat.shape[1]
-
+        
+        if self.scaler is None:
+            print("Defining new scaler")
+            scaler = StandardScaler()
+            feat = scaler.fit_transform(feat)
+            self.scaler = scaler
+        else:
+            print("Using old scaler")
+            feat = self.scaler.transform(feat)
+        
         return feat
         
     def get_mesh_features(self, df):

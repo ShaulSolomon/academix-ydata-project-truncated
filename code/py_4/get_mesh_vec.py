@@ -108,17 +108,8 @@ class MeshEmbeddings():
             
             # Inverse Document Frequency - log(N/df_i)
             IDF = np.log(self.N / freq_list.reshape(-1,1))
-            print(IDF)
-            
-            # 1 - df_i
-#             total = np.sum(freq_list) # 5 3 2 -> 10
-#             freq_list = (freq_list / total) # 0.5 0.3 0.2
-#             freq_list = (1- freq_list) # 0.5 0.7 0.8
-#             total = np.sum(freq_list) # 2
-#             freq_list = ((freq_list.reshape(-1,1)) / total.reshape(-1,1))
+
             return np.sum(mesh_emb * IDF,axis=0).reshape(1,-1)
-        if method == "avg-sklearn":
-            pass  
         else:
             print("METHOD NOT FOUND")
             return None
