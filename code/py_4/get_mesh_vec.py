@@ -108,7 +108,7 @@ class MeshEmbeddings():
             
             # Inverse Document Frequency - log(N/df_i)
             IDF = np.log(self.N / freq_list.reshape(-1,1))
-            print(IDF)
+            #print(IDF)
             
             # 1 - df_i
 #             total = np.sum(freq_list) # 5 3 2 -> 10
