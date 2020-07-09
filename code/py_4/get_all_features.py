@@ -34,6 +34,9 @@ class VAE_Features():
                 [x] OneHotEncoding for Country 
                 [ ] Pub Year
                 
+        Currently experimenting with:
+                [ ] mesh embeddings
+                
         '''
 
         feat_mesh = self.get_mesh_features(df)
@@ -44,6 +47,7 @@ class VAE_Features():
         # SANITY TEST
         # feat_name = self.get_names_features(df)
                 
+        feat = feat_mesh
         self.input_dims = feat.shape[1]
 
         return feat
@@ -58,7 +62,11 @@ class VAE_Features():
         '''
         mesh_emb = self.mesh_features.get_feat_mesh(df.mesh.to_list())
         mesh_count = self.mesh_features.get_mesh_count(df).reshape(-1,1)
-        return np.hstack((mesh_emb,mesh_count))
+#         return np.hstack((mesh_emb,mesh_count))
+
+        return mesh_emb
+        
+        
 
 
     def get_co_authors_features(self, df):
