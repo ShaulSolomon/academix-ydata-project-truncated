@@ -25,12 +25,14 @@ def db_multiple(ps, df, scaler,authors, use_case, weights,bias,epsilon):
         f1_scores - list of all f1 scores for epsilons
     '''
     #Get combinations of authors from the given use_case
-    auth_df = df[df['last_author_name'].isin(authors)]
-        
-    authors = sim_matrix_3.get_use_case(auth_df,use_case)
+    
+    if use_case == "1_da":
+        authors = sim_matrix_3.get_use_case(df,use_case)
+    else:
+        auth_df = df[df['last_author_name'].isin(authors)]   
+        authors = sim_matrix_3.get_use_case(auth_df,use_case)
     
     num_cases = len(authors)
-
 
     df_all_cases = []
     all_papers = []

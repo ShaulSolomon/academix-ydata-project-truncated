@@ -1,0 +1,32 @@
+# JUST OUR LOGR MODEL - July 12 #
+
+CASE: 2_da_same	Number of authors: 13	Avg. Number of papers: 14.846153846153847
+
+F1-Score: 0.6692298499550965	Total Precision: 0.7391438440661238	Total Recall: 0.6113989637305699
+                 2 cluster(s)  3 cluster(s)
+mis_integration           0.5           0.5
+mis_separation            0.5           0.5
+
+
+CASE: 2_da_dif	Number of authors: 29	Avg. Number of papers: 27.896551724137932
+
+F1-Score: 0.6814437563262112	Total Precision: 0.7871932929970169	Total Recall: 0.6007416563658838
+                 2 cluster(s)  4 cluster(s)
+mis_integration      0.714286      0.285714
+mis_separation       0.714286      0.285714
+
+
+CASE: 3_da	Number of authors: 37	Avg. Number of papers: 26.486486486486488
+
+F1-Score: 0.6893781835400131	Total Precision: 0.8081930118409941	Total Recall: 0.6010204081632654
+                 2 cluster(s)
+mis_integration           1.0
+mis_separation            1.0
+
+
+CASE: 1_da	Number of authors: 50	Avg. Number of papers: 13.96
+
+F1-Score: 0.9400151860288535	Total Precision: 1.0	Total Recall: 0.8868194842406877
+                 2 cluster(s)
+mis_integration           1.0
+mis_separation            1.0
