@@ -40,10 +40,14 @@ def run_db_scan(author_df: pd.DataFrame,
         return cluster_dfs
     
     
-def run_multiple_df_scan(ps, auth_df, scaler,use_case, num_cases,eps = None,params=None):
+def run_multiple_df_scan(ps, df, auth_df, scaler,use_case, num_cases,eps = None,params=None):
     
     #Get combinations of authors from the given use_case
-    authors = sim_matrix_3.get_use_case(auth_df,use_case)
+    if use_case == "1_da" or use_case == "mix_bag":
+        authors = sim_matrix_3.get_use_case(df,use_case)
+        auth_df = df[df['last_author_name'].isin(authors)]
+    else:
+        authors = sim_matrix_3.get_use_case(auth_df,use_case)
 
     num_authors = len(authors)
 
