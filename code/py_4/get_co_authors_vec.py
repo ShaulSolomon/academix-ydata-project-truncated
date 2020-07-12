@@ -1,4 +1,4 @@
-from py_4.feature_helper import get_co_authors
+import py_4.feature_helper as feature_helper
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 import pandas as pd
 from os import makedirs, path

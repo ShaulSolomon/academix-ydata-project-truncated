@@ -101,24 +101,16 @@ class MeshEmbeddings():
                         freq_list = np.append(freq_list, [1])
 
             # Need to inverse the frequency of each of the terms. So most popular term gets least value.
-            
-
             if len(freq_list) == 1:
                 return mesh_emb
-            
             # Inverse Document Frequency - log(N/df_i)
             IDF = np.log(self.N / freq_list.reshape(-1,1))
-            #print(IDF)
-            
-            # 1 - df_i
-#             total = np.sum(freq_list) # 5 3 2 -> 10
-#             freq_list = (freq_list / total) # 0.5 0.3 0.2
-#             freq_list = (1- freq_list) # 0.5 0.7 0.8
-#             total = np.sum(freq_list) # 2
-#             freq_list = ((freq_list.reshape(-1,1)) / total.reshape(-1,1))
+
             return np.sum(mesh_emb * IDF,axis=0).reshape(1,-1)
-        if method == "avg-sklearn":
-            pass  
+        #Return the first of the embeddings
+        elif method == "first":
+            return mesh_emb[0,:]
+            
         else:
             print("METHOD NOT FOUND")
             return None
@@ -131,7 +123,7 @@ class MeshEmbeddings():
         '''
         lst = []
         for mesh_terms in df_mesh:
-            lst.append(self.get_mesh_emb(mesh_terms))
+            lst.append(self.get_mesh_emb(mesh_terms, method='first').reshape(1,-1))
         return np.array(lst).squeeze()
     
     
