@@ -127,13 +127,14 @@ def get_use_case(df, use_case):
         unique_authors = df.groupby('last_author_name')[["PI_IDS"]].nunique()
         unique_authors = unique_authors[unique_authors["PI_IDS"] == 1].index
         indie_authors = df[df['last_author_name'].isin(unique_authors)].groupby(['last_author_name','PI_IDS'])[['pmid']].nunique().reset_index(1)
-        indie_authors = list(indie_authors[(indie_authors.pmid < 7) | (indie_authors.pmid > 40)].index)
+        indie_authors = list(indie_authors[((indie_authors.pmid < 7) | (indie_authors.pmid > 40)) & (indie_authors.pmid > 1)].index)
         len_all = len(indie_authors)
         np.random.seed(42)
         rand_auth = np.random.choice(range(len_all),50,replace=False)
         possible_authors_1 = list(np.array(indie_authors)[rand_auth])
 
         all_mix_authors = possible_authors_1 + possible_authors_2 + possible_authors_3
+        return all_mix_authors
     else:
         print("USE CASE NOT FOUND -  PLEASE LOOK AT DOCUMENTATION")
         return None
