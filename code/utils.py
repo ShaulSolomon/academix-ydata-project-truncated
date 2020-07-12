@@ -35,7 +35,7 @@ BUCKET = 'ayp-data'
 # PROJECT_ROOT = config_parser.get('LOCAL_PATHS', 'PROJECT_ROOT') 
 
 
-PROJECT_ROOT = "/content/AYP/"
+PROJECT_ROOT = "/home/ubuntu/AYP/"
 
 # DATA_PATH = config_parser.get('LOCAL_PATHS', 'DATA_PATH') 
 DATA_PATH = "data/labeled_data/"

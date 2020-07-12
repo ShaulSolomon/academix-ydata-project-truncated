@@ -43,7 +43,7 @@ class VAE_Features():
         feat_mesh = self.get_mesh_features(df)
         feat_coauth = self.get_co_authors_features(df)
         feat_cat = self.get_cat_features(df)
-        feat = np.hstack((feat_mesh,feat_coauth,feat_cat))
+#         feat = np.hstack((feat_mesh,feat_coauth,feat_cat))
         
         # SANITY TEST
         # feat_name = self.get_names_features(df)
@@ -74,10 +74,7 @@ class VAE_Features():
         mesh_count = self.mesh_features.get_mesh_count(df).reshape(-1,1)
 #         return np.hstack((mesh_emb,mesh_count))
 
-        return mesh_emb
-        
-        
-
+        return mesh_emb 
 
     def get_co_authors_features(self, df):
         '''
