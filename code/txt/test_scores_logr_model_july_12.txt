@@ -1,0 +1,38 @@
+CASE: 2_da_same	Number of authors: 13	Avg. Number of papers: 14.846153846153847
+
+F1-Score: 0.6692298499550965	Total Precision: 0.7391438440661238	Total Recall: 0.6113989637305699
+                 2 cluster(s)  3 cluster(s)
+mis_integration           0.5           0.5
+mis_separation            0.5           0.5
+
+
+CASE: 2_da_dif	Number of authors: 29	Avg. Number of papers: 27.896551724137932
+
+F1-Score: 0.6693923821729397	Total Precision: 0.7850518746936703	Total Recall: 0.5834363411619282
+                 2 cluster(s)  4 cluster(s)
+mis_integration      0.714286      0.285714
+mis_separation       0.714286      0.285714
+
+
+CASE: 3_da	Number of authors: 37	Avg. Number of papers: 26.486486486486488
+
+F1-Score: 0.6932887788713777	Total Precision: 0.8061230114942148	Total Recall: 0.6081632653061225
+                 2 cluster(s)
+mis_integration           1.0
+mis_separation            1.0
+
+
+CASE: 1_da	Number of authors: 50	Avg. Number of papers: 13.96
+
+F1-Score: 0.9408194233687405	Total Precision: 1.0	Total Recall: 0.8882521489971347
+                 4 cluster(s)
+mis_integration           1.0
+mis_separation            1.0
+
+
+CASE: mix_bag	Number of authors: 132	Avg. Number of papers: 8.81060606060606
+
+F1-Score: 0.7921745431449791	Total Precision: 0.8720417853908823	Total Recall: 0.7257093723129837
+                 1 cluster(s)
+mis_integration           1.0
+mis_separation            1.0
