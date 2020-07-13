@@ -123,7 +123,7 @@ class MeshEmbeddings():
         '''
         lst = []
         for mesh_terms in df_mesh:
-            lst.append(self.get_mesh_emb(mesh_terms, method='first').reshape(1,-1))
+            lst.append(self.get_mesh_emb(mesh_terms, method='avg').reshape(1,-1))
         return np.array(lst).squeeze()
     
     
