@@ -106,7 +106,10 @@ class MeshEmbeddings():
             # Inverse Document Frequency - log(N/df_i)
             IDF = np.log(self.N / freq_list.reshape(-1,1))
 
-            return np.sum(mesh_emb * IDF,axis=0).reshape(1,-1)
+            #Not using the IDF
+            return np.mean(mesh_emb,axis=0).reshape(1,-1)
+        
+#             return np.mean(mesh_emb * IDF,axis=0).reshape(1,-1)
         #Return the first of the embeddings
         elif method == "first":
             return mesh_emb[0,:]
