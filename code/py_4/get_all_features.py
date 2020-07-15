@@ -45,12 +45,8 @@ class VAE_Features():
         feat_mesh = self.get_mesh_features(df)
         feat_coauth = self.get_co_authors_features(df)
         feat_cat = self.get_cat_features(df)
-#         feat = np.hstack((feat_mesh,feat_coauth,feat_cat))
-        
-        # SANITY TEST
-        # feat_name = self.get_names_features(df)
+        feat = np.hstack((feat_mesh,feat_coauth,feat_cat))
                 
-        feat = feat_coauth
         self.input_dims = feat.shape[1]
         
         if self.scaling_flag:
