@@ -12,7 +12,7 @@ from sklearn.preprocessing import StandardScaler
 
 class VAE_Features():
     
-    def __init__(self,df_train,mesh_path_file=PROJECT_ROOT+"data/mesh_data/MeSHFeatureGeneratedByDeepWalk.csv"):
+    def __init__(self,df_train,mesh_path_file=PROJECT_ROOT+"data/mesh_data/MeSHFeatureGeneratedByDeepWalk.csv",scaling_flag = True):
         self.df_train = df_train
         self.mesh_features = get_mesh_vec.MeshEmbeddings(mesh_path_file)
         self.mesh_features.set_mesh_freq(df_train.mesh.to_list())
@@ -20,6 +20,8 @@ class VAE_Features():
         self.cat_feats =  get_cat_vet.CatFeat(df_train)
         self.co_authors_emb=get_co_authors_vec.CoAuthorEmbeddings()
         self.scaler = None
+        # If we should scale the Data
+        self.scaling_flag = scaling_flag
 
     def get_all_features(self,df):
         '''
@@ -51,15 +53,16 @@ class VAE_Features():
         feat = feat_mesh
         self.input_dims = feat.shape[1]
         
-        if self.scaler is None:
-            print("Defining new scaler")
-            scaler = StandardScaler()
-            feat = scaler.fit_transform(feat)
-            self.scaler = scaler
-        else:
-            print("Using old scaler")
-            feat = self.scaler.transform(feat)
-        
+        if self.scaling_flag:
+            if self.scaler is None:
+                print("Defining new scaler")
+                scaler = StandardScaler()
+                feat = scaler.fit_transform(feat)
+                self.scaler = scaler
+            else:
+                print("Using old scaler")
+                feat = self.scaler.transform(feat)
+
         return feat
         
     def get_mesh_features(self, df):
