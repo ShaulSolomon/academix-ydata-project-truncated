@@ -279,7 +279,7 @@ class PaperClusterer:
         if(self.scaler):
                 print(dist.shape)
                 dist= self.scaler.transform(dist)
-        clustering = DBSCAN(eps=self.eps, min_samples=2, metric="precomputed").fit(dist, sample_weight=paper_weights)
+        clustering = DBSCAN(eps=self.eps, min_samples=1, metric="precomputed").fit(dist, sample_weight=paper_weights)
         return clustering.labels_
 
     def build_distance_matrix(self, df, just_sim_matrix_flag = False):

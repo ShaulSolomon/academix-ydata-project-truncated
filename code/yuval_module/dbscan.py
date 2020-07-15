@@ -43,7 +43,7 @@ def run_db_scan(author_df: pd.DataFrame,
 def run_multiple_df_scan(ps, auth_df, scaler,use_case, num_cases,eps = None,params=None):
     
     #Get combinations of authors from the given use_case
-    authors = sim_matrix_3.get_use_case(auth_df,use_case)
+    authors = auth_df
 
     num_authors = len(authors)
 
