@@ -50,7 +50,7 @@ class VAE_Features():
         # SANITY TEST
         # feat_name = self.get_names_features(df)
                 
-        feat = feat_mesh
+        feat = feat_coauth
         self.input_dims = feat.shape[1]
         
         if self.scaling_flag:
