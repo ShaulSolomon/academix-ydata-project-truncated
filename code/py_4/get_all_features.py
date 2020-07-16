@@ -71,9 +71,8 @@ class VAE_Features():
         '''
         mesh_emb = self.mesh_features.get_feat_mesh(df.mesh.to_list())
         mesh_count = self.mesh_features.get_mesh_count(df).reshape(-1,1)
-#         return np.hstack((mesh_emb,mesh_count))
+        return np.hstack((mesh_emb,mesh_count))
 
-        return mesh_emb 
 
     def get_co_authors_features(self, df):
         '''
