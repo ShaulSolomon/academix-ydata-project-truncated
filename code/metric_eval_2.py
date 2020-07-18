@@ -7,38 +7,38 @@ from sklearn.metrics import recall_score
 from collections import defaultdict
 
 def assign_labels_to_clusters(df_core: pd.DataFrame, num_clusters: list) -> pd.DataFrame:
-  '''
-  Based off algorithm in 2_metric_classification, use greedy algorithm to assign a PI_ID to a cluster.
+    '''
+    Based off algorithm in 2_metric_classification, use greedy algorithm to assign a PI_ID to a cluster.
 
-  input:
-  df_core - dataframe of doc pairs with dbscan approximation
-  num_clusters(list) - the number of clusters the dbscan assumed.
+    input:
+    df_core - dataframe of doc pairs with dbscan approximation
+    num_clusters(list) - the number of clusters the dbscan assumed.
 
-  output:
-  df_core - return dataframe with the cluster_assigned column, which cluster the paper should be assigned to. 
-  '''
-  K_dict = dict()
-  set_of_clusters = set(num_clusters)
-  #get pi_ids sorted by most productive
-  pi_id_sorted = list(df_core.groupby('PI_IDS').size().sort_values(ascending=False).reset_index()['PI_IDS'])
-  for pi_id in pi_id_sorted:
+    output:
+    df_core - return dataframe with the cluster_assigned column, which cluster the paper should be assigned to. 
+    '''
+    K_dict = dict()
+    set_of_clusters = set(num_clusters)
+    #get pi_ids sorted by most productive
+    pi_id_sorted = list(df_core.groupby('PI_IDS').size().sort_values(ascending=False).reset_index()['PI_IDS'])
+    for pi_id in pi_id_sorted:
     #Get most popular clusters for each id
-    cluster_for_id = [c_id for c_id, _ in Counter(df_core[df_core['PI_IDS'] == pi_id].cluster_pred).most_common()]
-    for c in cluster_for_id:
-      if c not in set_of_clusters:
-        continue
-      else:
-        K_dict[pi_id] = c
-        set_of_clusters.remove(c)
-        break
+        cluster_for_id = [c_id for c_id, _ in Counter(df_core[df_core['PI_IDS'] == pi_id].cluster_pred).most_common()]
+        for c in cluster_for_id:
+            if c not in set_of_clusters:
+                continue
+            else:
+                K_dict[pi_id] = c
+                set_of_clusters.remove(c)
+                break
   
   #give pi_id with no cluster, c = -1 (both where #clus > #pi_id and #pi _id > #clus)    
-  for pi_id in pi_id_sorted:
-    if pi_id not in K_dict:
-      K_dict[pi_id] = -1
+    for pi_id in pi_id_sorted:
+        if pi_id not in K_dict:
+            K_dict[pi_id] = -1
 
-  df_core['cluster_assigned'] = [K_dict[pid] for pid in df_core.PI_IDS]
-  return df_core
+    df_core['cluster_assigned'] = [K_dict[pid] for pid in df_core.PI_IDS]
+    return df_core
 
 def get_metrics(df, verbose=False):
   '''

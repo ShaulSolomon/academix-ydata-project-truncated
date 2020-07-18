@@ -31,7 +31,7 @@ def run_db_scan(author_df: pd.DataFrame,
                 eps(float): epsilon
         """
         print("Running Yuval's DBscan\n")
-        paper_clusterer=PaperClusterer(eps, gammas, scaler)
+        paper_clusterer=PaperClusterer(eps, gammas, scaler=scaler)
         # dist matrix
         combined_dist, combined_sim, total_df = paper_clusterer.get_dist_matrix(author_df)
         # cluster
@@ -61,9 +61,9 @@ def run_multiple_df_scan(ps, df, auth_df, scaler,use_case, num_cases,eps = None,
         all_papers.append(df_auth.shape[0])
         #Calculate the distance matrix
         if eps is not None:
-            cluster_dfs = run_db_scan(df_auth,eps,params)
+            cluster_dfs = run_db_scan(df_auth,eps,params,scaler)
         else:
-            cluster_dfs = run_db_scan(df_auth)
+            cluster_dfs = run_db_scan(df_auth,scaler)
         y_hat_comb.append(cluster_dfs[["pmid","PI_IDS","cluster_pred"]])
     
     return y_hat_comb, num_authors, np.mean(np.array(all_papers))
