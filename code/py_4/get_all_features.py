@@ -42,10 +42,10 @@ class VAE_Features():
                 
         '''
 
-        #feat_mesh = self.get_mesh_features(df)
+        feat_mesh = self.get_mesh_features(df)
         feat_coauth = self.get_co_authors_features(df)
-        #feat_cat = self.get_cat_features(df)
-        #feat = np.hstack((feat_mesh,feat_coauth,feat_cat))
+        feat_cat = self.get_cat_features(df)
+        feat = np.hstack((feat_mesh,feat_coauth,feat_cat))
                 
         
         if self.scaling_flag:
@@ -57,9 +57,7 @@ class VAE_Features():
             else:
                 print("Using old scaler")
                 feat = self.scaler.transform(feat)
-        
-        feat = feat_coauth
-        
+            
         self.input_dims = feat.shape[1]
 
         return feat
