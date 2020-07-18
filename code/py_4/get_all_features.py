@@ -42,10 +42,10 @@ class VAE_Features():
                 
         '''
 
-        feat_mesh = self.get_mesh_features(df)
+        #feat_mesh = self.get_mesh_features(df)
         feat_coauth = self.get_co_authors_features(df)
-        feat_cat = self.get_cat_features(df)
-        feat = np.hstack((feat_mesh,feat_coauth,feat_cat))
+        #feat_cat = self.get_cat_features(df)
+        #feat = np.hstack((feat_mesh,feat_coauth,feat_cat))
                 
         
         if self.scaling_flag:
@@ -57,6 +57,8 @@ class VAE_Features():
             else:
                 print("Using old scaler")
                 feat = self.scaler.transform(feat)
+        
+        feat = feat_coauth
         
         self.input_dims = feat.shape[1]
 
@@ -81,17 +83,22 @@ class VAE_Features():
         
             - co_authors to vector        
         '''
-        df['co_authors']=df.authors.apply( lambda x: [i['name'] for i in x] )
-        res=[]
-        count_coauth = []
-        for au_list in df['co_authors'].to_list():
-            res.extend(self.co_authors_emb.infer_vec([i for i in au_list]))
-            count_coauth.append(len(au_list))
+        
+#         res=[]
+#         count_coauth = []
+#         for au_list in df['co_authors'].to_list():
+#             res.extend(self.co_authors_emb.get_coauth_emb(au_list))
+#             count_coauth.append(len(au_list))
 
-        name_vec = np.array(res).reshape(df.shape[0],-1)
-        count_coauth = np.array(count_coauth).reshape(-1,1)
-        #name_freq = self.get_freq_char(df.co_authors) 
-        return np.hstack((name_vec,count_coauth))
+#         name_vec = np.array(res).reshape(df.shape[0],-1)
+#         count_coauth = np.array(count_coauth).reshape(-1,1)
+#         name_freq = self.get_freq_char(df.co_authors) 
+        
+        df['co_authors']=df.authors.apply(lambda x: [i['name'].lower().split(",") for i in x] )
+        coauth_emb, count_coauth = self.co_authors_emb.get_feat_coauth(df.co_authors.to_list())
+        return np.hstack((coauth_emb,count_coauth))
+
+
 
     def get_names_features(self, df):
         '''
