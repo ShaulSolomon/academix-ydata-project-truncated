@@ -9,10 +9,14 @@ import numpy as np
 import math
 from sklearn.model_selection import GridSearchCV
 from sklearn.cluster import DBSCAN as DBS
+from sklearn.linear_model import LogisticRegression as LogR
 from collections import Counter 
 from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
 from collections import defaultdict
+
+from yuval_module.paper_clusterer import PaperClusterer
+
 
 import itertools
 
@@ -34,12 +38,14 @@ def pipeline(sim_matrix_train,dict_auth,ps) -> dict:
     lr__penalty = ['l1', 'l2','elasticnet']
     lr__C = np.logspace(0, 4, 10),
     lr__solver = ['newton-cg', 'lbfgs', 'liblinear', 'sag', 'saga'],
-    db__eps = np.linspace(.43,.58,20)
+    db__eps = np.linspace(.3,2.58,20)
     s = [lr__penalty, lr__C[0], lr__solver[0], db__eps]
     all_combinations = list(itertools.product((*s)))
     
     best_penalty = None
     best_C = None
+    best_weights = None
+    best_bias = None
     best_solver = None
     best_eps = None
     best_F1 = 0.0
@@ -113,13 +119,15 @@ def pipeline_yuvals_code(sim_matrix_train,df,dict_auth,scaler,ps) -> dict:
     lr__penalty = ['l1', 'l2','elasticnet']
     lr__C = np.logspace(0, 4, 10),
     lr__solver = ['newton-cg', 'lbfgs', 'liblinear', 'sag', 'saga'],
-    db__eps = np.linspace(.43,.58,20)
+    db__eps = np.linspace(0.1,2.0,30)
     s = [lr__penalty, lr__C[0], lr__solver[0], db__eps]
     all_combinations = list(itertools.product((*s)))
     
     best_penalty = None
     best_C = None
     best_solver = None
+    best_weights = None
+    best_bias = None
     best_eps = None
     best_F1 = 0.0
 
@@ -129,31 +137,29 @@ def pipeline_yuvals_code(sim_matrix_train,df,dict_auth,scaler,ps) -> dict:
             model = log.fit(X_train,y_train)
             weights = model.coef_[0]
             bias = model.intercept_[0]
-            
+
             df_all_cases = []
             y_hat_comb = []
 
-            
-            for auth in dict_auth.keys():
-                
-                df_auth = df[df['last_author_name'] == auth]
-                
-                print("Running Yuval's DBscan\n")
+            for auth in list(dict_auth.keys()):
+                df_auth = dict_auth[auth]['df']
                 param_dict = {}
                 param_dict['author'], param_dict['mesh'], param_dict['inst'], param_dict['email'], param_dict['country'], param_dict['forename'] = weights
+                param_dict['email'] = 0
+
+
                 paper_clusterer= PaperClusterer(db_eps, gammas=param_dict , scaler=scaler,bias=bias)
-                
                 # dist matrix
                 combined_dist, combined_sim, total_df = paper_clusterer.get_dist_matrix(df_auth)
                 # cluster
                 res_clusters, cluster_dfs=paper_clusterer.cluster_res(total_df)
                 cluster_dfs = cluster_dfs.rename(columns={'cluster':'cluster_pred'})
-                
-                y_hat_comb.append(df_clus)
 
-                   
+                y_hat_comb.append(cluster_dfs[["pmid","PI_IDS","cluster_pred"]])
+
+
             f1, precision, recall, df_eval = metric_eval_2.get_metrics_many(y_hat_comb)
-                        
+
             if f1 > best_F1:
                 best_F1 = f1
                 best_penalty = lr_penalty
