@@ -12,7 +12,7 @@ from sklearn.preprocessing import StandardScaler
 
 class VAE_Features():
     
-    def __init__(self,df_train,mesh_path_file=PROJECT_ROOT+"data/mesh_data/MeSHFeatureGeneratedByDeepWalk.csv",scaling_flag = True):
+    def __init__(self,df_train,mesh_path_file=PROJECT_ROOT+"data/mesh_data/ownmesh2vec.model",scaling_flag = True):
         self.df_train = df_train
         self.mesh_features = get_mesh_vec.MeshEmbeddings(mesh_path_file)
         self.mesh_features.set_mesh_freq(df_train.mesh.to_list())
@@ -47,7 +47,6 @@ class VAE_Features():
         feat_cat = self.get_cat_features(df)
         feat = np.hstack((feat_mesh,feat_coauth,feat_cat))
                 
-        self.input_dims = feat.shape[1]
         
         if self.scaling_flag:
             if self.scaler is None:
@@ -58,6 +57,8 @@ class VAE_Features():
             else:
                 print("Using old scaler")
                 feat = self.scaler.transform(feat)
+        
+        self.input_dims = feat.shape[1]
 
         return feat
         

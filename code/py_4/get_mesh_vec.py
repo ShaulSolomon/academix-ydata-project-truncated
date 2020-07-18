@@ -3,6 +3,7 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer as tfidf
 from utils import PROJECT_ROOT, DATA_PATH
 import re
+from gensim.models import Word2Vec
 
 
 '''Helper Functions'''
@@ -14,9 +15,17 @@ def csv_to_df(df):
 
 class MeshEmbeddings():
 
-    def __init__(self,path_file=PROJECT_ROOT+"data/mesh_data/MeSHFeatureGeneratedByDeepWalk.csv"):
-        df = pd.read_csv(path_file,header=None).set_index(0)
-        self.mesh_dict = csv_to_df(df)
+    #For own mesh embedding
+#     def __init__(self,path_file=PROJECT_ROOT+"data/mesh_data/MeSHFeatureGeneratedByDeepWalk.csv"):
+#         df = pd.read_csv(path_file,header=None).set_index(0)
+#         self.mesh_dict = csv_to_df(df)
+#         self.dict_freq = None
+#         self.mesh_missing = set()
+        
+    def __init__(self, path_file=PROJECT_ROOT+"data/mesh_data/ownmesh2vec.model"):
+        print(path_file)
+        model = Word2Vec.load(path_file)
+        self.mesh_dict = {k : model[k] for k in model.wv.index2word}
         self.dict_freq = None
         self.mesh_missing = set()
 
@@ -58,7 +67,7 @@ class MeshEmbeddings():
             :param str mesh_name - name of the given mesh term
             :return list - vector embedding of mesh term
         '''
-        mesh_name = re.sub(r"\/.*","",mesh_name)
+        mesh_name = re.sub(r"\/.*","",mesh_name.lower())
         if mesh_name in self.mesh_dict:
             return self.mesh_dict[mesh_name]
         else:
