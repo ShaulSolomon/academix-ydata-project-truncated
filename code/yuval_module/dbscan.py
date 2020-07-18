@@ -21,7 +21,8 @@ def run_db_scan(author_df: pd.DataFrame,
                                 "inst":0.1,
                                 "email":0.1,
                                 "country":0.0},
-                scaler=None
+                scaler=None,
+                bias = None
                 ):
         """
         run DBscan using yuval's code
@@ -31,7 +32,7 @@ def run_db_scan(author_df: pd.DataFrame,
                 eps(float): epsilon
         """
         print("Running Yuval's DBscan\n")
-        paper_clusterer=PaperClusterer(eps, gammas, scaler)
+        paper_clusterer=PaperClusterer(eps, gammas, scaler=scaler,bias=bias)
         # dist matrix
         combined_dist, combined_sim, total_df = paper_clusterer.get_dist_matrix(author_df)
         # cluster
@@ -40,7 +41,7 @@ def run_db_scan(author_df: pd.DataFrame,
         return cluster_dfs
     
     
-def run_multiple_df_scan(ps, df, auth_df, scaler,use_case, num_cases,eps = None,params=None):
+def run_multiple_df_scan(ps, df, auth_df, scaler,use_case, num_cases,eps = None,params=None,bias=None):
     
     #Get combinations of authors from the given use_case
     if use_case == "1_da" or use_case == "mix_bag":
@@ -61,9 +62,9 @@ def run_multiple_df_scan(ps, df, auth_df, scaler,use_case, num_cases,eps = None,
         all_papers.append(df_auth.shape[0])
         #Calculate the distance matrix
         if eps is not None:
-            cluster_dfs = run_db_scan(df_auth,eps,params)
+            cluster_dfs = run_db_scan(df_auth,eps =eps,gammas=params,bias=bias,scaler=scaler)
         else:
-            cluster_dfs = run_db_scan(df_auth)
+            cluster_dfs = run_db_scan(df_auth,scaler = scaler)
         y_hat_comb.append(cluster_dfs[["pmid","PI_IDS","cluster_pred"]])
     
     return y_hat_comb, num_authors, np.mean(np.array(all_papers))

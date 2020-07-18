@@ -209,13 +209,13 @@ def get_similarity_matrix(ps,dfs_authors,scaler=None,flag_base= True):
           sim_matrix = sim_matrix.iloc[pairs]
         total_df = pd.concat([total_df,sim_matrix])
 
-    if flag_base:
-        #Normalize the data
-        scaler =  StandardScaler()
-        total_df.iloc[:,:-1] = scaler.fit_transform(total_df.iloc[:,:-1])
-    else:
-        # Normalize the data
-        total_df.iloc[:,:-1] = scaler.transform(total_df.iloc[:,:-1])
+#     if flag_base:
+#         #Normalize the data
+#         scaler =  StandardScaler()
+#         total_df.iloc[:,:-1] = scaler.fit_transform(total_df.iloc[:,:-1])
+#     else:
+#         # Normalize the data
+#         total_df.iloc[:,:-1] = scaler.transform(total_df.iloc[:,:-1])
 
     print("Returning Similarity Matrix.")
     print("Number of pairs after cleaning: ", len(total_df.index))

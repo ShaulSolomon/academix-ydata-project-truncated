@@ -91,7 +91,7 @@ def get_train_all(df):
     return train_df.iloc[:,:-1] , train_df.iloc[:,-1]
 
 def sigmoid(x):
-  return 1 / (1 + math.exp(-x))
+    return 1 / (1 + math.exp(-x))
 
 def log_model(X_train,y_train,X_test,y_test):
   '''
