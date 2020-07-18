@@ -12,13 +12,19 @@ from sklearn.preprocessing import StandardScaler
 
 class VAE_Features():
     
-    def __init__(self,df_train,mesh_path_file=PROJECT_ROOT+"data/mesh_data/ownmesh2vec.model",scaling_flag = True):
+    def __init__(self,df_train,scaling_flag = True):
         self.df_train = df_train
-        self.mesh_features = get_mesh_vec.MeshEmbeddings(mesh_path_file)
+        
+        self.mesh_features = get_mesh_vec.MeshEmbeddings_own(PROJECT_ROOT+"data/mesh_data/ownmesh2vec.model")
+#         self.mesh_features = get_mesh_vec.MeshEmbeddings(PROJECT_ROOT+"data/mesh_data/MeSHFeatureGeneratedByDeepWalk.csv")
+
+        self.co_authors_emb=get_co_authors_vec.CoAuthorEmbeddings_own()
+#         self.co_authors_emb=get_co_authors_vec.CoAuthorEmbeddings()
+
+        
         self.mesh_features.set_mesh_freq(df_train.mesh.to_list())
         self.name_emb=get_names_vec.NameEmbeddings()
         self.cat_feats =  get_cat_vet.CatFeat(df_train)
-        self.co_authors_emb=get_co_authors_vec.CoAuthorEmbeddings()
         self.scaler = None
         # If we should scale the Data
         self.scaling_flag = scaling_flag
@@ -41,9 +47,11 @@ class VAE_Features():
                 [ ] mesh embeddings
                 
         '''
-
-        feat_mesh = self.get_mesh_features(df)
-        feat_coauth = self.get_co_authors_features(df)
+        
+        
+        feat_mesh = self.get_own_mesh_features(df)
+        feat_coauth = self.get_own_co_authors_features(df)
+#         feat_coauth = self.get_co_authors_features(df)
         feat_cat = self.get_cat_features(df)
         feat = np.hstack((feat_mesh,feat_coauth,feat_cat))
                 
@@ -75,26 +83,33 @@ class VAE_Features():
         return np.hstack((mesh_emb,mesh_count))
 
 
+    def get_own_co_authors_features(self, df):
+        '''
+        Returns all the features related to co authors .
+        
+            - co_authors to vector        
+        ''' 
+        df['co_authors']=df.authors.apply(lambda x: [i['name'].lower().split(",") for i in x] )
+        coauth_emb, count_coauth = self.co_authors_emb.get_feat_coauth(df.co_authors.to_list())
+        return np.hstack((coauth_emb,count_coauth))
+    
     def get_co_authors_features(self, df):
         '''
         Returns all the features related to co authors .
         
             - co_authors to vector        
         '''
-        
-#         res=[]
-#         count_coauth = []
-#         for au_list in df['co_authors'].to_list():
-#             res.extend(self.co_authors_emb.get_coauth_emb(au_list))
-#             count_coauth.append(len(au_list))
+        df['co_authors']=df.authors.apply( lambda x: [i['name'] for i in x] )
+        res=[]
+        count_coauth = []
+        for au_list in df['co_authors'].to_list():
+            res.extend(self.co_authors_emb.infer_vec([i for i in au_list]))
+            count_coauth.append(len(au_list))
 
-#         name_vec = np.array(res).reshape(df.shape[0],-1)
-#         count_coauth = np.array(count_coauth).reshape(-1,1)
-#         name_freq = self.get_freq_char(df.co_authors) 
-        
-        df['co_authors']=df.authors.apply(lambda x: [i['name'].lower().split(",") for i in x] )
-        coauth_emb, count_coauth = self.co_authors_emb.get_feat_coauth(df.co_authors.to_list())
-        return np.hstack((coauth_emb,count_coauth))
+        name_vec = np.array(res).reshape(df.shape[0],-1)
+        count_coauth = np.array(count_coauth).reshape(-1,1)
+        #name_freq = self.get_freq_char(df.co_authors) 
+        return np.hstack((name_vec,count_coauth))
 
 
 

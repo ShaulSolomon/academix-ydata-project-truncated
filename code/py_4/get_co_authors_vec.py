@@ -6,25 +6,10 @@ from os import makedirs, path
 from utils import PROJECT_ROOT, DATA_PATH
 from gensim.models import Word2Vec
  
-class CoAuthorEmbeddings():
+class CoAuthorEmbeddings_own():
     """
     class for handeling co-author vector
     """
-#     def __init__(self):
-#         self.model_path=PROJECT_ROOT+"code/models/co_authors_epochs_2_vectorSize_64_window_2.model"
-#         self.model = self.get_model()
-
-#     def get_model(self):
-#         if path.exists(self.model_path):
-#             print(f"'{self.model_path}' already exits. Using existing model to re-generate results.")
-#             model = Doc2Vec.load(self.model_path)
-#         else:
-#             print('error finding names model')
-#         return model
-
-#     def infer_vec(self, co_authors: list):
-#         return self.model.infer_vector(co_authors)
-
     def __init__(self):
         self.model_path = PROJECT_ROOT + "data/owncoauth2vec.model"
         self.model =  Word2Vec.load(self.model_path)
@@ -50,6 +35,25 @@ class CoAuthorEmbeddings():
             coauth_emb = np.zeros((1,64))
         return np.mean(coauth_emb, axis=0)
                 
+class CoAuthorEmbeddings():
+    """
+    class for handeling co-author vector
+    """
+    def __init__(self):
+        self.model_path=PROJECT_ROOT+"code/models/co_authors_epochs_2_vectorSize_64_window_2.model"
+        self.model = self.get_model()
+
+    def get_model(self):
+        if path.exists(self.model_path):
+            print(f"'{self.model_path}' already exits. Using existing model to re-generate results.")
+            model = Doc2Vec.load(self.model_path)
+        else:
+            print('error finding names model')
+        return model
+
+    def infer_vec(self, co_authors: list):
+        return self.model.infer_vector(co_authors)
+
     
 if __name__ == "__main__":
     x = [['tiwari', ' p'], ['rosen', ' muhhamed'], ['madabhushi', ' at']]
