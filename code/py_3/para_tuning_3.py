@@ -96,7 +96,7 @@ def pipeline(sim_matrix_train,dict_auth,ps) -> dict:
             'best_bias':best_bias}
 
 
-def pipeline_yuvals code(sim_matrix_train,df,dict_auth,scaler,ps) -> dict:
+def pipeline_yuvals_code(sim_matrix_train,df,dict_auth,scaler,ps) -> dict:
     '''
     Pipelines from Author Names -> Pairs Weights -> Log R model -> DB Scan -> F1 Score
     
