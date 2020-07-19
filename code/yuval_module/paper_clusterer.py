@@ -91,7 +91,7 @@ class PaperClusterer:
             #print(for_clustering_df['weight'])
             for_clustering_df=self.cluster_by_sim(combined_dist,for_clustering_df)
             total_df=for_clustering_df.rename(columns={"db_cluster":"cluster"})
-            total_df["cluster"].fillna(-1.0, inplace=True)
+#             total_df["cluster"].fillna(-1.0, inplace=True)
             self.print_cluster_metrics(total_df)
             return combined_dist, combined_sim, total_df
 
@@ -397,7 +397,10 @@ class PaperClusterer:
             feat_df[k] = np.array(all_values).reshape(int(np.sqrt(len(all_values))),-1)
             
         combined_sim=self.combine_similarities(feat_df)
-        combined_dist=self.sim_to_dist(combined_sim)
+        if self.scaler:
+            combined_dist = combined_sim
+        else:
+            combined_dist=self.sim_to_dist(combined_sim)
         combined_dist_vector=combined_dist.reshape(num_items,)
         #print(pd.Series(combined_dist_vector).describe())
 

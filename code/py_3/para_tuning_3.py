@@ -35,7 +35,7 @@ def pipeline(sim_matrix_train,dict_auth,ps) -> dict:
     X_train, y_train = lr_model_3.get_train_all(sim_matrix_train)
 
     ###Possible hyper-parameters to tune
-    lr__penalty = ['l1', 'l2','elasticnet']
+    lr__penalty = ['l1']
     lr__C = np.logspace(0, 4, 10),
     lr__solver = ['newton-cg', 'lbfgs', 'liblinear', 'sag', 'saga'],
     db__eps = np.linspace(.3,2.58,20)
