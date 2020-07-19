@@ -49,7 +49,7 @@ class VAE_Features():
         '''
         
         
-        feat_mesh = self.get_own_mesh_features(df)
+        feat_mesh = self.get_mesh_features(df)
         feat_coauth = self.get_own_co_authors_features(df)
 #         feat_coauth = self.get_co_authors_features(df)
         feat_cat = self.get_cat_features(df)
