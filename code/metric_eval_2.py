@@ -65,7 +65,11 @@ def get_metrics(df, verbose=False):
         print("Precision score: {}, Recall score: {}".format(precision, recall))
     mis_intergration_dict = dict()
     mis_separation_dict = dict()
-
+    
+    perc_auth_missed = df[df['cluster_assigned'] == -1]["PI_IDS"].nunique() /  df["PI_IDS"].nunique()
+#     pi_missed = df[df['cluster_assigned'] == -1]["PI_IDS"].unique()
+#     df = df[np.invert(df_yhat['PI_IDS'].isin(pi_missed))]
+    
     eval_dict = dict()
     eval_dict['mis_integration'] = mis_intergration_dict
     eval_dict['mis_separation'] = mis_separation_dict
@@ -98,7 +102,7 @@ def get_metrics(df, verbose=False):
     df_eval.columns = new_col
     if(verbose):
         print(df_eval)
-    return num_clusters_db, num_authors, precision, recall, df_eval
+    return num_clusters_db, num_authors, precision, recall, df_eval, perc_auth_missed
 
 def get_metrics_many(group_cases):
     '''
@@ -119,13 +123,14 @@ def get_metrics_many(group_cases):
     for i,group in enumerate(group_cases):
         df_core = assign_labels_to_clusters(group, group['cluster_pred'].unique())
         num_papers = df_core.shape[0]
-        num_clusters_db, num_authors, precision, recall, df_eval = get_metrics(df_core)
+        num_clusters_db, num_authors, precision, recall, df_eval, perc_auth_missed = get_metrics(df_core)
         print("Situation {}".format(i))
         print("Num Papers: ", num_papers)
         print("Num Clusters: ", num_clusters_db)
         print("Num Unique Authors: ", num_authors)
         print("Precision: ", precision)
         print("Recall: ",recall)
+        print("Unclusterd Auth: ", perc_auth_missed)
         print(df_eval.T)
         print("\n-------------------\n")
         total_precision = np.concatenate((total_precision,[precision]))

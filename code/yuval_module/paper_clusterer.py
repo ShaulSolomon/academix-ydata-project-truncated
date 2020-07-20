@@ -492,7 +492,6 @@ class PaperClusterer:
 
     def combine_similarities(self, similarity_map, forename_sims = None):
        
-        
         key_set=set(similarity_map.keys())
         
         if self.flag_logr:
