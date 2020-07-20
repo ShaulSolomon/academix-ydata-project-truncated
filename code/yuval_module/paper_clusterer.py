@@ -27,7 +27,8 @@ class PaperClusterer:
                         "email": 0.1,
                         "country": 0.0},
                 scaler=None,
-                bias = None
+                bias = None,
+                flag_logr = False
                 ):
         """
         Class for clustering researcher publications using DBscan
@@ -43,6 +44,7 @@ class PaperClusterer:
         self.gammas = gammas 
         self.scaler = scaler
         self.bias = bias
+        self.flag_logr = flag_logr
 
     def empty_last_author_response(self, row):
         res_row={"pmid":row.pmid,
@@ -374,12 +376,12 @@ class PaperClusterer:
                               "forename":forename_sim.reshape(num_items,)
                               })
         
-        if self.scaler:
+        if self.flag_logr:
             print("Scaling the values")
             feat_df = self.scaler.transform(feat_df)  
             feat_df = pd.DataFrame(feat_df,columns=["author","mesh", "inst","email","country","forename"])
             #keep the old fore_name
-            feat_df['forename'] = forename_sim.reshape(num_items,)
+#             feat_df['forename'] = forename_sim.reshape(num_items,)
         
         if just_sim_matrix_flag:
             return feat_df
@@ -395,12 +397,13 @@ class PaperClusterer:
             for key, value in v.items():
                 all_values.append(value)
             feat_df[k] = np.array(all_values).reshape(int(np.sqrt(len(all_values))),-1)
-            
-        combined_sim=self.combine_similarities(feat_df)
-        if self.scaler:
-            combined_dist = combined_sim
+        
+        if self.flag_logr:
+            combined_sim = self.combine_similarities(feat_df,forename_sim.reshape(int(np.sqrt(len(all_values))),-1))
         else:
-            combined_dist=self.sim_to_dist(combined_sim)
+            combined_sim=self.combine_similarities(feat_df)
+        
+        combined_dist=self.sim_to_dist(combined_sim)
         combined_dist_vector=combined_dist.reshape(num_items,)
         #print(pd.Series(combined_dist_vector).describe())
 
@@ -487,23 +490,23 @@ class PaperClusterer:
         
         return res
 
-    def combine_similarities(self, similarity_map):
+    def combine_similarities(self, similarity_map, forename_sims = None):
        
         
         key_set=set(similarity_map.keys())
-        key_set.remove("forename")
-                
-        weighted_sims=[self.gammas[k]*similarity_map[k] for k in key_set]
-        aa=[w.shape for w in weighted_sims]
         
-        #print(aa)
-        
-        avg_sim=np.sum(w for w in weighted_sims)
-        
-        if self.bias:
-            avg_sim = np.array([[sigmoid(elem + self.bias) for elem in one_row] for one_row in avg_sim])
+        if self.flag_logr:
+            weighted_sims=[self.gammas[k]*similarity_map[k] for k in key_set]
+            avg_sim=np.sum(w for w in weighted_sims)
+            avg_sim = np.array([[1 - np.square(sigmoid(elem + self.bias)) for elem in one_row] for one_row in avg_sim])
+            sim=np.minimum(avg_sim, forename_sims)
+
+        else:
+            key_set.remove("forename")
+            weighted_sims=[self.gammas[k]*similarity_map[k] for k in key_set]
+            avg_sim=np.sum(w for w in weighted_sims)
+            sim=np.minimum(avg_sim, similarity_map["forename"])
             
-        sim=np.minimum(avg_sim, similarity_map["forename"])
         return sim
 
     def sim_to_dist(self, sim):

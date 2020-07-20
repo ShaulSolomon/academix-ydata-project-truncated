@@ -58,8 +58,8 @@ def get_metrics(df, verbose=False):
     '''
     num_clusters_db = len(np.unique(df.cluster_pred))
     num_authors = len(np.unique(df.PI_IDS))
-    precision = precision_score(df.cluster_assigned,df.cluster_pred,average='micro')
-    recall = recall_score(df.cluster_assigned,df.cluster_pred,average='micro')
+    precision = precision_score(df.cluster_assigned,df.cluster_pred,average='weighted')
+    recall = recall_score(df.cluster_assigned,df.cluster_pred,average='weighted')
     if(verbose):
         print("Number of clusters (DBS): {}\nNumber of unique authors: {}".format(num_clusters_db,num_authors))
         print("Precision score: {}, Recall score: {}".format(precision, recall))
