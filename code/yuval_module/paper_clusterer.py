@@ -12,6 +12,11 @@ from tqdm import tqdm
 
 from yuval_module.paper_source import PaperSource
 
+import math
+
+def sigmoid(x):
+    return 1 / (1 + math.exp(-x))
+
 class PaperClusterer:
     def __init__(self, 
                 eps=1.37,
@@ -21,7 +26,9 @@ class PaperClusterer:
                         "inst": 0.1,
                         "email": 0.1,
                         "country": 0.0},
-                scaler=None
+                scaler=None,
+                bias = None,
+                flag_logr = False
                 ):
         """
         Class for clustering researcher publications using DBscan
@@ -36,6 +43,8 @@ class PaperClusterer:
         self.num_dict_terms=len(self.cur_dict.keys())
         self.gammas = gammas 
         self.scaler = scaler
+        self.bias = bias
+        self.flag_logr = flag_logr
 
     def empty_last_author_response(self, row):
         res_row={"pmid":row.pmid,
@@ -84,7 +93,7 @@ class PaperClusterer:
             #print(for_clustering_df['weight'])
             for_clustering_df=self.cluster_by_sim(combined_dist,for_clustering_df)
             total_df=for_clustering_df.rename(columns={"db_cluster":"cluster"})
-            total_df["cluster"].fillna(-1.0, inplace=True)
+#             total_df["cluster"].fillna(-1.0, inplace=True)
             self.print_cluster_metrics(total_df)
             return combined_dist, combined_sim, total_df
 
@@ -139,6 +148,7 @@ class PaperClusterer:
         #print("before tfidf, mesh_clean is:")
         #print(for_clustering_df["mesh_clean"])
         for_clustering_df.loc[:, "mesh_as_tfidf"]=for_clustering_df["mesh_clean"].apply(self.mesh_tfidf_transform)
+
         #with pandas_log.enable():   
         if len(for_clustering_df)==1:
             for_clustering_df.loc[:, "db_cluster"]=0
@@ -276,10 +286,10 @@ class PaperClusterer:
 
     def dbscan_cluster(self, dist, paper_weights):
         #MAXIMAL_DIST=1.37
-        if(self.scaler):
-                print(dist.shape)
-                dist= self.scaler.transform(dist)
-        clustering = DBSCAN(eps=self.eps, min_samples=1, metric="precomputed").fit(dist, sample_weight=paper_weights)
+#         if(self.scaler):
+#                 print(dist.shape)
+#                 dist= self.scaler.transform(dist)
+        clustering = DBSCAN(eps=self.eps, min_samples=0.0, metric="precomputed").fit(dist, sample_weight=paper_weights)
         return clustering.labels_
 
     def build_distance_matrix(self, df, just_sim_matrix_flag = False):
@@ -366,6 +376,13 @@ class PaperClusterer:
                               "forename":forename_sim.reshape(num_items,)
                               })
         
+        if self.flag_logr:
+            print("Scaling the values")
+            feat_df = self.scaler.transform(feat_df)  
+            feat_df = pd.DataFrame(feat_df,columns=["author","mesh", "inst","email","country","forename"])
+            #keep the old fore_name
+#             feat_df['forename'] = forename_sim.reshape(num_items,)
+        
         if just_sim_matrix_flag:
             return feat_df
         
@@ -374,10 +391,18 @@ class PaperClusterer:
 
         #print("similarity statistics:")
         #print(feat_df.describe())
-
-    
-
-        combined_sim=self.combine_similarities(similarities)
+        feat_df = feat_df.to_dict()
+        for k,v in feat_df.items():
+            all_values = []
+            for key, value in v.items():
+                all_values.append(value)
+            feat_df[k] = np.array(all_values).reshape(int(np.sqrt(len(all_values))),-1)
+        
+        if self.flag_logr:
+            combined_sim = self.combine_similarities(feat_df,forename_sim.reshape(int(np.sqrt(len(all_values))),-1))
+        else:
+            combined_sim=self.combine_similarities(feat_df)
+        
         combined_dist=self.sim_to_dist(combined_sim)
         combined_dist_vector=combined_dist.reshape(num_items,)
         #print(pd.Series(combined_dist_vector).describe())
@@ -465,16 +490,22 @@ class PaperClusterer:
         
         return res
 
-    def combine_similarities(self, similarity_map):
+    def combine_similarities(self, similarity_map, forename_sims = None):
        
-        
         key_set=set(similarity_map.keys())
-        key_set.remove("forename")
-        weighted_sims=[self.gammas[k]*similarity_map[k] for k in key_set]
-        aa=[w.shape for w in weighted_sims]
-        #print(aa)
-        avg_sim=np.sum(w for w in weighted_sims)
-        sim=np.minimum(avg_sim, similarity_map["forename"])
+        
+        if self.flag_logr:
+            weighted_sims=[self.gammas[k]*similarity_map[k] for k in key_set]
+            avg_sim=np.sum(w for w in weighted_sims)
+            avg_sim = np.array([[1 - np.square(sigmoid(elem + self.bias)) for elem in one_row] for one_row in avg_sim])
+            sim=np.minimum(avg_sim, forename_sims)
+
+        else:
+            key_set.remove("forename")
+            weighted_sims=[self.gammas[k]*similarity_map[k] for k in key_set]
+            avg_sim=np.sum(w for w in weighted_sims)
+            sim=np.minimum(avg_sim, similarity_map["forename"])
+            
         return sim
 
     def sim_to_dist(self, sim):
