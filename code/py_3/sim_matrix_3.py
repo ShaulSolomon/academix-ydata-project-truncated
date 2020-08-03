@@ -75,6 +75,66 @@ def get_use_case(df, use_case):
         unique_authors = df.groupby('last_author_name')[["PI_IDS"]].nunique()
         unique_authors = unique_authors[unique_authors["PI_IDS"] == 3].index
         return unique_authors
+    elif use_case == '1_da':
+        unique_authors = df.groupby('last_author_name')[["PI_IDS"]].nunique()
+        unique_authors = unique_authors[unique_authors["PI_IDS"] == 1].index
+        indie_authors = df[df['last_author_name'].isin(unique_authors)].groupby(['last_author_name','PI_IDS'])[['pmid']].nunique().reset_index(1)
+        indie_authors = list(indie_authors[(indie_authors.pmid > 7) & (indie_authors.pmid < 40)].index)
+        len_all = len(indie_authors)
+        np.random.seed(42)
+        rand_auth = np.random.choice(range(len_all),50,replace=False)
+        return list(np.array(indie_authors)[rand_auth])
+    elif use_case == "mix_bag":
+        #Authors from both 1,2,3 with small papers and large ones
+        #Get disambiguate authors
+        unique_authors = df.groupby('last_author_name')[["PI_IDS"]].nunique()
+        unique_authors = unique_authors[unique_authors["PI_IDS"] == 2].index
+        #Combine rows based off last_author_name
+        indie_authors = df[df['last_author_name'].isin(unique_authors)].groupby(['last_author_name','PI_IDS'])[['pmid']].nunique().reset_index(1)
+        indie_authors = indie_authors.join(indie_authors, lsuffix="_l", rsuffix='_r').reset_index()
+        indie_authors = indie_authors[indie_authors["PI_IDS_l"] != indie_authors["PI_IDS_r"]].drop_duplicates("last_author_name",keep="first").set_index('last_author_name')
+        indie_authors = list(indie_authors[(indie_authors["pmid_l"] < 3) | 
+                                            (indie_authors["pmid_r"] < 3)].index)
+        len_all = len(indie_authors)
+        np.random.seed(42)
+        rand_auth = np.random.choice(range(len_all),50,replace=False)
+        possible_authors_2 = list(np.array(indie_authors)[rand_auth])
+
+        unique_authors = df.groupby('last_author_name')[["PI_IDS"]].nunique()
+        unique_authors = unique_authors[unique_authors["PI_IDS"] == 3].index
+        indie_authors = df[df['last_author_name'].isin(unique_authors)].groupby(['last_author_name','PI_IDS'])[['pmid']]                                                                  .nunique().reset_index(1)
+
+        indie_authors2 = indie_authors.join(indie_authors, lsuffix="_l", rsuffix='_r')
+        indie_authors = indie_authors2.join(indie_authors, lsuffix="_l", rsuffix='_r').reset_index()
+
+        indie_authors = indie_authors[(indie_authors["PI_IDS_l"] != indie_authors["PI_IDS_r"]) & \
+                                    (indie_authors["PI_IDS_l"] != indie_authors["PI_IDS"]) & \
+                                    (indie_authors["PI_IDS_r"] != indie_authors["PI_IDS"])] \
+                                    .drop_duplicates("last_author_name",keep="first") \
+                                    .set_index('last_author_name')                     
+
+        possible_authors_3 = list(indie_authors[(((indie_authors["pmid_l"] < 3) & \
+                                  (indie_authors["pmid_r"] < 3) & \
+                                  (indie_authors["pmid"] > 3)) | \
+                            ((indie_authors["pmid_l"] < 3) & \
+                                  (indie_authors["pmid_r"] > 3) & \
+                                  (indie_authors["pmid"] < 3)) | \
+                            ((indie_authors["pmid_l"] > 3) & \
+                                  (indie_authors["pmid_r"] < 3) & \
+                                  (indie_authors["pmid"] < 3)))].index)
+
+
+        unique_authors = df.groupby('last_author_name')[["PI_IDS"]].nunique()
+        unique_authors = unique_authors[unique_authors["PI_IDS"] == 1].index
+        indie_authors = df[df['last_author_name'].isin(unique_authors)].groupby(['last_author_name','PI_IDS'])[['pmid']].nunique().reset_index(1)
+        indie_authors = list(indie_authors[((indie_authors.pmid < 7) | (indie_authors.pmid > 40)) & (indie_authors.pmid > 1)].index)
+        len_all = len(indie_authors)
+        np.random.seed(42)
+        rand_auth = np.random.choice(range(len_all),50,replace=False)
+        possible_authors_1 = list(np.array(indie_authors)[rand_auth])
+
+        all_mix_authors = possible_authors_1 + possible_authors_2 + possible_authors_3
+        return all_mix_authors
     else:
         print("USE CASE NOT FOUND -  PLEASE LOOK AT DOCUMENTATION")
         return None
@@ -149,13 +209,13 @@ def get_similarity_matrix(ps,dfs_authors,scaler=None,flag_base= True):
           sim_matrix = sim_matrix.iloc[pairs]
         total_df = pd.concat([total_df,sim_matrix])
 
-    if flag_base:
-        #Normalize the data
-        scaler =  StandardScaler()
-        total_df.iloc[:,:-1] = scaler.fit_transform(total_df.iloc[:,:-1])
-    else:
-        # Normalize the data
-        total_df.iloc[:,:-1] = scaler.transform(total_df.iloc[:,:-1])
+#     if flag_base:
+#         #Normalize the data
+#         scaler =  StandardScaler()
+#         total_df.iloc[:,:-1] = scaler.fit_transform(total_df.iloc[:,:-1])
+#     else:
+#         # Normalize the data
+#         total_df.iloc[:,:-1] = scaler.transform(total_df.iloc[:,:-1])
 
     print("Returning Similarity Matrix.")
     print("Number of pairs after cleaning: ", len(total_df.index))

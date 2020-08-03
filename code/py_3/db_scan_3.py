@@ -25,12 +25,14 @@ def db_multiple(ps, df, scaler,authors, use_case, weights,bias,epsilon):
         f1_scores - list of all f1 scores for epsilons
     '''
     #Get combinations of authors from the given use_case
-    auth_df = df[df['last_author_name'].isin(authors)]
-        
-    authors = sim_matrix_3.get_use_case(auth_df,use_case)
+    
+    if use_case == "1_da" or use_case == "mix_bag":
+        authors = sim_matrix_3.get_use_case(df,use_case)
+    else:
+        auth_df = df[df['last_author_name'].isin(authors)]   
+        authors = sim_matrix_3.get_use_case(auth_df,use_case)
     
     num_cases = len(authors)
-
 
     df_all_cases = []
     all_papers = []
@@ -41,6 +43,7 @@ def db_multiple(ps, df, scaler,authors, use_case, weights,bias,epsilon):
         all_papers.append(df_auth.shape[0])
         #Calculate the distance matrix
         
+        print(auth)
         df_sim,_ = sim_matrix_3.get_similarity_matrix(ps,df_auth,scaler,flag_base = False)
         X_feat = df_sim.iloc[:,:-1]
         X_feat_weights = [lr_model_3.sigmoid(np.dot(x_test,weights) + bias) for x_test in X_feat.to_numpy()]

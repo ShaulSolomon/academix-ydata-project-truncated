@@ -14,18 +14,34 @@ from configparser import ConfigParser
 import json
 
 ### fetch the credentials ###
-creds_path = "credentials.ini"
+
+############ ONLY FOR NOW ###########
+creds_path = "credentials2.ini"
 config_parser = ConfigParser()
 config_parser.read(creds_path)
-s3_dict = config_parser["S3"]
-AWS_ACCESS_KEY = s3_dict['AWS_ACCESS_KEY']
-AWS_ACCESS_SECRET_KEY = s3_dict['AWS_ACCESS_SECRET_KEY']
-BUCKET = s3_dict['BUCKET']
+# s3_dict = config_parser["S3"]
+
+
+# AWS_ACCESS_KEY = config_parser.get('S3', 'AWS_ACCESS_KEY') 
+# AWS_ACCESS_SECRET_KEY = config_parser.get('S3', 'AWS_ACCESS_SECRET_KEY') 
+# BUCKET = config_parser.get('S3', 'BUCKET') 
+
+AWS_ACCESS_KEY = 'AKIAIA55FCCZKLRCFQKQ'
+AWS_ACCESS_SECRET_KEY = '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'
+BUCKET = 'ayp-data'
 
 ### LOCAL_PATHS ##
-LOCAL_PATHS =config_parser["LOCAL_PATHS"]
-PROJECT_ROOT=LOCAL_PATHS['PROJECT_ROOT']
-DATA_PATH = LOCAL_PATHS['DATA_PATH']
+# LOCAL_PATHS =config_parser["LOCAL_PATHS"]
+# PROJECT_ROOT = config_parser.get('LOCAL_PATHS', 'PROJECT_ROOT') 
+
+
+PROJECT_ROOT = "/home/ubuntu/AYP/"
+
+# DATA_PATH = config_parser.get('LOCAL_PATHS', 'DATA_PATH') 
+DATA_PATH = "data/labeled_data/"
+
+s3_dict  = {'AWS_ACCESS_KEY': AWS_ACCESS_KEY, 'AWS_ACCESS_SECRET_KEY': AWS_ACCESS_SECRET_KEY, 'BUCKET': BUCKET}
+
 #####
 
 
@@ -35,6 +51,7 @@ def get_creds() -> dict:
         returns dict
         """
         return s3_dict
+
 
 
 def list_files_in_bucket(AWS_ACCESS_KEY=AWS_ACCESS_KEY, AWS_ACCESS_SECRET_KEY=AWS_ACCESS_SECRET_KEY, bucket=BUCKET):
@@ -47,18 +64,18 @@ def list_files_in_bucket(AWS_ACCESS_KEY=AWS_ACCESS_KEY, AWS_ACCESS_SECRET_KEY=AW
         return [i for i in mybucket.list()]
 
 
-def get_dataframe_from_s3(AWS_ACCESS_KEY=AWS_ACCESS_KEY, AWS_ACCESS_SECRET_KEY=AWS_ACCESS_SECRET_KEY, bucket=BUCKET, file="data.csv", type="csv"):
+def get_dataframe_from_s3(AWS_ACCESS_KEY=s3_dict['AWS_ACCESS_KEY'], AWS_ACCESS_SECRET_KEY=AWS_ACCESS_SECRET_KEY, bucket=BUCKET, file="data.csv", type="csv"):
   conn = S3Connection(AWS_ACCESS_KEY, AWS_ACCESS_SECRET_KEY)
   conn.auth_region_name = 'eu-west-1.amazonaws.com'
   mybucket = conn.get_bucket(bucket)
 
   # Retrieve Data
   key = mybucket.get_key(file)
-  key.get_contents_to_filename(PROJECT_ROOT + '/data/' + file)
+  key.get_contents_to_filename(PROJECT_ROOT + 'data/' + file)
   if type=="json":
-          df = pd.read_json(PROJECT_ROOT + '/data/' + file, orient="records")
+          df = pd.read_json(PROJECT_ROOT + 'data/' + file, orient="records")
   else:
-          df = pd.read_csv(PROJECT_ROOT + '/data/' + file)
+          df = pd.read_csv(PROJECT_ROOT + 'data/' + file)
   return df
 
 
