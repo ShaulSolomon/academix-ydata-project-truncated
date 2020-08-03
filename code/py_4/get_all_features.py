@@ -12,11 +12,7 @@ from sklearn.preprocessing import StandardScaler
 
 class VAE_Features():
     
-<<<<<<< HEAD
-    def __init__(self,df_train,scaling_flag = True):
-=======
     def __init__(self,df_train,mesh_path_file=PROJECT_ROOT+"data/mesh_data/MeSHFeatureGeneratedByDeepWalk.csv",scaling_flag = True):
->>>>>>> new_branch
         self.df_train = df_train
         
         self.mesh_features = get_mesh_vec.MeshEmbeddings_own(PROJECT_ROOT+"data/mesh_data/ownmesh2vec.model")
@@ -29,10 +25,8 @@ class VAE_Features():
         self.mesh_features.set_mesh_freq(df_train.mesh.to_list())
         self.name_emb=get_names_vec.NameEmbeddings()
         self.cat_feats =  get_cat_vet.CatFeat(df_train)
-<<<<<<< HEAD
-=======
         self.co_authors_emb=get_co_authors_vec.CoAuthorEmbeddings()
->>>>>>> new_branch
+
         self.scaler = None
         # If we should scale the Data
         self.scaling_flag = scaling_flag
@@ -59,6 +53,7 @@ class VAE_Features():
         
         feat_mesh = self.get_mesh_features(df)
 <<<<<<< HEAD
+<<<<<<< HEAD
         feat_coauth = self.get_own_co_authors_features(df)
 #         feat_coauth = self.get_co_authors_features(df)
         feat_cat = self.get_cat_features(df)
@@ -75,13 +70,6 @@ class VAE_Features():
                 print("Using old scaler")
                 feat = self.scaler.transform(feat)
             
-=======
-        feat_coauth = self.get_co_authors_features(df)
-        feat_cat = self.get_cat_features(df)
-        feat = np.hstack((feat_mesh,feat_coauth,feat_cat))
-                
->>>>>>> new_branch
-        self.input_dims = feat.shape[1]
         
         if self.scaling_flag:
             if self.scaler is None:
@@ -92,6 +80,8 @@ class VAE_Features():
             else:
                 print("Using old scaler")
                 feat = self.scaler.transform(feat)
+            
+        self.input_dims = feat.shape[1]
 
         return feat
         
@@ -135,11 +125,8 @@ class VAE_Features():
         count_coauth = np.array(count_coauth).reshape(-1,1)
         #name_freq = self.get_freq_char(df.co_authors) 
         return np.hstack((name_vec,count_coauth))
-<<<<<<< HEAD
 
 
-=======
->>>>>>> new_branch
 
     def get_names_features(self, df):
         '''

@@ -44,15 +44,7 @@ def run_db_scan(author_df: pd.DataFrame,
 def run_multiple_df_scan(ps, df, auth_df, use_case,scaler = None,eps = None,params=None,bias=None):
     
     #Get combinations of authors from the given use_case
-<<<<<<< HEAD
     authors = auth_df
-=======
-    if use_case == "1_da" or use_case == "mix_bag":
-        authors = sim_matrix_3.get_use_case(df,use_case)
-        auth_df = df[df['last_author_name'].isin(authors)]
-    else:
-        authors = sim_matrix_3.get_use_case(auth_df,use_case)
->>>>>>> new_branch
 
     num_authors = len(authors)
 
@@ -67,8 +59,10 @@ def run_multiple_df_scan(ps, df, auth_df, use_case,scaler = None,eps = None,para
         #Calculate the distance matrix
         if params:
             cluster_dfs = run_db_scan(df_auth,eps =eps,gammas=params,bias=bias,scaler=scaler)
+        if eps is not None:
+            cluster_dfs = run_db_scan(df_auth,eps,params,scaler)
         else:
-            cluster_dfs = run_db_scan(df_auth)
+            cluster_dfs = run_db_scan(df_auth,scaler)
         y_hat_comb.append(cluster_dfs[["pmid","PI_IDS","cluster_pred"]])
     
     return y_hat_comb, num_authors, np.sum(all_papers)
