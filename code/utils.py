@@ -16,29 +16,21 @@ import json
 ### fetch the credentials ###
 
 ############ ONLY FOR NOW ###########
-creds_path = "credentials2.ini"
+creds_path = "credentials.ini"
 config_parser = ConfigParser()
 config_parser.read(creds_path)
-# s3_dict = config_parser["S3"]
 
 
-# AWS_ACCESS_KEY = config_parser.get('S3', 'AWS_ACCESS_KEY') 
-# AWS_ACCESS_SECRET_KEY = config_parser.get('S3', 'AWS_ACCESS_SECRET_KEY') 
-# BUCKET = config_parser.get('S3', 'BUCKET') 
+AWS_ACCESS_KEY = config_parser.get('S3', 'AWS_ACCESS_KEY') 
+AWS_ACCESS_SECRET_KEY = config_parser.get('S3', 'AWS_ACCESS_SECRET_KEY') 
+BUCKET = config_parser.get('S3', 'BUCKET') 
 
-AWS_ACCESS_KEY = 'AKIAIA55FCCZKLRCFQKQ'
-AWS_ACCESS_SECRET_KEY = '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'
-BUCKET = 'ayp-data'
-
-### LOCAL_PATHS ##
-# LOCAL_PATHS =config_parser["LOCAL_PATHS"]
-# PROJECT_ROOT = config_parser.get('LOCAL_PATHS', 'PROJECT_ROOT') 
+## LOCAL_PATHS ##
+LOCAL_PATHS =config_parser["LOCAL_PATHS"]
+PROJECT_ROOT = config_parser.get('LOCAL_PATHS', 'PROJECT_ROOT') 
 
 
-PROJECT_ROOT = "/home/ubuntu/AYP/"
-
-# DATA_PATH = config_parser.get('LOCAL_PATHS', 'DATA_PATH') 
-DATA_PATH = "data/labeled_data/"
+DATA_PATH = config_parser.get('LOCAL_PATHS', 'DATA_PATH') 
 
 s3_dict  = {'AWS_ACCESS_KEY': AWS_ACCESS_KEY, 'AWS_ACCESS_SECRET_KEY': AWS_ACCESS_SECRET_KEY, 'BUCKET': BUCKET}
 

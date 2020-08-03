@@ -1,8 +1,0 @@
-,0
-best_F1,0.6849610085975393
-best_penalty,l1
-best_C,1.0
-best_solver,liblinear
-best_eps,0.43
-best_weights,[-0.01442226 -0.06362535 -0.28114567  0.03438976 -0.30097347 -0.09168013]
-best_bias,-0.037710936649050834
