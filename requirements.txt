@@ -38,7 +38,7 @@ parso==0.7.0
 pickleshare==0.7.5
 pluggy==0.13.1
 prompt-toolkit==3.0.3
-py==1.8.1
+py==1.10.0
 Pygments==2.6.1
 pylint==2.5.0
 pymed==0.8.9
